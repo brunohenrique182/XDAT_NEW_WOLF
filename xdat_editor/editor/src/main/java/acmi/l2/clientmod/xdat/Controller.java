@@ -95,6 +95,7 @@ public class Controller implements Initializable {
     @FXML
     private Menu languageMenu;
     private ToggleGroup version = new ToggleGroup();
+    private final Map<String, Class<? extends IOEntity>> xdatClassCache = new java.util.concurrent.ConcurrentHashMap<>();
     private ToggleGroup themeGroup = new ToggleGroup();
     private ToggleGroup languageGroup = new ToggleGroup();
     @FXML
@@ -287,9 +288,9 @@ public class Controller implements Initializable {
     private void initializeRecentFiles() {
         fileOps.getRecentFilesManager().getRecentFiles().addListener(
                 (javafx.collections.ListChangeListener<acmi.l2.clientmod.xdat.util.RecentFilesManager.RecentFile>) c -> {
-                    fileOps.updateRecentFilesMenu(recentFilesMenu);
+                    fileOps.updateRecentFilesMenu(recentFilesMenu, version);
                 });
-        fileOps.updateRecentFilesMenu(recentFilesMenu);
+        fileOps.updateRecentFilesMenu(recentFilesMenu, version);
     }
 
     public void registerVersion(String name, String xdatClass) {
@@ -299,8 +300,13 @@ public class Controller implements Initializable {
             if (newValue) {
                 fileOps.setCurrentVersionName(name);
                 editor.execute(() -> {
-                    Class<? extends IOEntity> clazz = Class.forName(xdatClass, true,
-                            new GroovyClassLoader(getClass().getClassLoader())).asSubclass(IOEntity.class);
+                    Class<? extends IOEntity> loaded = xdatClassCache.get(xdatClass);
+                    if (loaded == null) {
+                        loaded = Class.forName(xdatClass, true,
+                                new GroovyClassLoader(getClass().getClassLoader())).asSubclass(IOEntity.class);
+                        xdatClassCache.put(xdatClass, loaded);
+                    }
+                    final Class<? extends IOEntity> clazz = loaded;
                     Platform.runLater(() -> editor.setXdatClass(clazz));
                     return null;
                 }, e -> {

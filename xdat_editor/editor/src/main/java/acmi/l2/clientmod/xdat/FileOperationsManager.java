@@ -258,7 +258,7 @@ class FileOperationsManager {
         }
 
         // Try to find and select the version
-        if (recentFile.getVersionName() != null) {
+        if (recentFile.getVersionName() != null && versionGroup != null) {
             for (Toggle toggle : versionGroup.getToggles()) {
                 if (toggle instanceof RadioMenuItem) {
                     RadioMenuItem menuItem = (RadioMenuItem) toggle;
@@ -278,7 +278,7 @@ class FileOperationsManager {
         });
     }
 
-    void updateRecentFilesMenu(Menu recentFilesMenu) {
+    void updateRecentFilesMenu(Menu recentFilesMenu, ToggleGroup versionGroup) {
         recentFilesMenu.getItems().clear();
 
         if (recentFilesManager.getRecentFiles().isEmpty()) {
@@ -288,7 +288,7 @@ class FileOperationsManager {
         } else {
             for (RecentFilesManager.RecentFile recentFile : recentFilesManager.getRecentFiles()) {
                 MenuItem item = new MenuItem(recentFile.toString());
-                item.setOnAction(e -> openRecentFile(recentFile, null));  // ToggleGroup will be passed from Controller
+                item.setOnAction(e -> openRecentFile(recentFile, versionGroup));
                 recentFilesMenu.getItems().add(item);
             }
 

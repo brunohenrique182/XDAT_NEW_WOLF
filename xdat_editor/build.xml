@@ -188,6 +188,7 @@ Options:
                includeantruntime="false"
                debug="true">
             <classpath>
+                <path refid="javafx.classpath"/>
                 <pathelement location="${build.dir}/classes/commons-io"/>
                 <pathelement location="${jsquish.jar}"/>
                 <pathelement location="${lib.dir}/commons-io-${commons-io.version}.jar"/>
@@ -220,6 +221,7 @@ Options:
                  destdir="${build.dir}/classes/schema"
                  encoding="UTF-8">
             <classpath>
+                <path refid="javafx.classpath"/>
                 <pathelement location="${build.dir}/classes/commons-io"/>
                 <pathelement location="${build.dir}/classes/commons-l2resources"/>
                 <path refid="groovy.classpath"/>
