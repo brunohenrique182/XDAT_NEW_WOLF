@@ -133,6 +133,10 @@ class TreeManager {
         pane.setDividerPositions(0.3);
 
         tab.setContent(wrap(pane));
+        // Exposed so callers (Controller) don't have to guess the tree's position
+        // inside the tab's node hierarchy, which is otherwise an implementation
+        // detail of how this method lays things out.
+        tab.setUserData(elements);
 
         return tab;
     }

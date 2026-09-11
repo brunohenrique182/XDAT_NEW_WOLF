@@ -50,6 +50,9 @@ import java.util.logging.Logger;
 
 public class Controller implements Initializable {
     private static final Logger log = Logger.getLogger(Controller.class.getName());
+    // Only ever used from the FX Application Thread (cell rendering), so a single
+    // shared instance is safe despite SimpleDateFormat not being thread-safe.
+    private static final java.text.SimpleDateFormat HISTORY_TIME_FORMAT = new java.text.SimpleDateFormat("HH:mm:ss");
 
     private XdatEditor editor;
     private ResourceBundle interfaceResources;
@@ -111,14 +114,12 @@ public class Controller implements Initializable {
 
     public Controller(XdatEditor editor) {
         this.editor = editor;
-        this.fileOps = new FileOperationsManager(editor, interfaceResources);
     }
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         interfaceResources = resources;
 
-        // Recreate FileOperationsManager with resources now available
         this.fileOps = new FileOperationsManager(editor, interfaceResources);
         this.treeManager = new TreeManager(editor, interfaceResources, fileOps.l2resourcesProperty());
         this.searchReplace = new SearchReplaceManager(editor, interfaceResources);
@@ -181,25 +182,20 @@ public class Controller implements Initializable {
                 scriptTab.setContent(scriptingTab);
                 tabs.getTabs().add(scriptTab);
             }
+        });
 
-            // Track current tree view for clipboard operations
-            tabs.getSelectionModel().selectedItemProperty().addListener((obs, oldTab, newTab) -> {
-                if (newTab != null && newTab.getContent() instanceof AnchorPane) {
-                    AnchorPane anchor = (AnchorPane) newTab.getContent();
-                    if (!anchor.getChildren().isEmpty() && anchor.getChildren().get(0) instanceof SplitPane) {
-                        SplitPane split = (SplitPane) anchor.getChildren().get(0);
-                        if (!split.getItems().isEmpty() && split.getItems().get(0) instanceof VBox) {
-                            VBox vbox = (VBox) split.getItems().get(0);
-                            for (Node node : vbox.getChildren()) {
-                                if (node instanceof TreeView) {
-                                    currentTreeView = (TreeView<Object>) node;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }
-            });
+        // Track current tree view for clipboard operations. Registered once: the
+        // TabPane's selection model is the same object for the app's lifetime, so
+        // re-adding this inside the xdatClassProperty listener above would stack a
+        // new listener on every version switch.
+        //
+        // TreeManager.createTab() stashes its TreeView as the tab's userData, so we
+        // don't have to guess its position in the tab's node hierarchy (the Script
+        // tab has no userData, and simply leaves currentTreeView unchanged).
+        tabs.getSelectionModel().selectedItemProperty().addListener((obs, oldTab, newTab) -> {
+            if (newTab != null && newTab.getUserData() instanceof TreeView) {
+                currentTreeView = (TreeView<Object>) newTab.getUserData();
+            }
         });
 
         progressBar.visibleProperty().bind(editor.workingProperty());
@@ -491,6 +487,10 @@ public class Controller implements Initializable {
             // Clone the element
             IOEntity clone = ElementCloner.deepClone((IOEntity) value);
             if (clone == null) {
+                Dialogs.showException(Alert.AlertType.ERROR,
+                        "Duplicate failed",
+                        "Couldn't duplicate " + value.getClass().getSimpleName() + ". See log for details.",
+                        null);
                 return;
             }
 
@@ -585,10 +585,7 @@ public class Controller implements Initializable {
                     setText(null);
                     setGraphic(null);
                 } else {
-                    setText(item.getDescription());
-                    // Format timestamp
-                    java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("HH:mm:ss");
-                    String time = sdf.format(new java.util.Date(item.getTimestamp()));
+                    String time = HISTORY_TIME_FORMAT.format(new java.util.Date(item.getTimestamp()));
                     setStyle("-fx-font-family: monospace;");
                     setText(String.format("[%s] %s", time, item.getDescription()));
                 }

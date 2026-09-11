@@ -31,11 +31,14 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Utility class for deep cloning IOEntity objects.
  */
 public class ElementCloner {
+    private static final Logger log = Logger.getLogger(ElementCloner.class.getName());
 
     /**
      * Creates a deep clone of an IOEntity object.
@@ -58,7 +61,7 @@ public class ElementCloner {
 
             return clone;
         } catch (Exception e) {
-            e.printStackTrace();
+            log.log(Level.WARNING, "Couldn't clone " + source.getClass().getSimpleName(), e);
             return null;
         }
     }

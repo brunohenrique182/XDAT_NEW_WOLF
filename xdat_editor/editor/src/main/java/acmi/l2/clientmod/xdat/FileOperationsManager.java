@@ -103,7 +103,8 @@ class FileOperationsManager {
                     for (int i = 0; i < count; i++) {
                         SysstringPropertyEditor.strings.put(IOUtil.readInt(is), IOUtil.readString(is));
                     }
-                } catch (Exception ignore) {
+                } catch (Exception e) {
+                    log.log(Level.WARNING, "Couldn't load sysstring file: " + file, e);
                 }
             }
 
@@ -112,7 +113,8 @@ class FileOperationsManager {
             try {
                 TexturePropertyEditor.environment = Environment.fromIni(file);
                 TexturePropertyEditor.environment.getPaths().forEach(s -> log.info("environment path: " + s));
-            } catch (Exception ignore) {
+            } catch (Exception e) {
+                log.log(Level.WARNING, "Couldn't load environment from " + file, e);
             }
         });
     }
@@ -133,53 +135,20 @@ class FileOperationsManager {
         if (selected == null)
             return;
 
-        xdatFile.setValue(selected);
-        initialDirectory.setValue(selected.getParentFile());
-
-        try (DataInputStream dis = new DataInputStream(new FileInputStream(selected))) {
-            int i = Integer.reverseBytes(dis.readInt());
-
-            if (i < 0 || i > 0xFFFF) {
-                throw new IOException("File seems to be encrypted.");
-            }
-        } catch (IOException e) {
-            Dialogs.showException(Alert.AlertType.ERROR, "Read error", e.getMessage(), e);
-            return;
-        }
-
-        try {
-            IOEntity xdat = editor.getXdatClass().getConstructor().newInstance();
-
-            editor.execute(() -> {
-                CountingInputStream cis = new CountingInputStream(new BufferedInputStream(new FileInputStream(selected)));
-                try (InputStream is = cis) {
-                    xdat.read(is);
-
-                    Platform.runLater(() -> {
-                        editor.setXdatObject(xdat);
-                        // Add to recent files
-                        recentFilesManager.addRecentFile(selected, currentVersionName);
-                    });
-                } catch (Throwable e) {
-                    String msg = String.format("Read error before offset 0x%x", cis.getCount());
-                    log.log(Level.WARNING, msg, e);
-                    throw new IOException(msg, e);
-                }
-                return null;
-            }, e -> Dialogs.showException(Alert.AlertType.ERROR, "Read error", "Try to choose another version", e));
-        } catch (ReflectiveOperationException e) {
-            String msg = "XDAT class should have empty public constructor";
-            log.log(Level.WARNING, msg, e);
-            Dialogs.showException(Alert.AlertType.ERROR, "ReflectiveOperationException", msg, e);
-        }
+        openFile(selected, () -> recentFilesManager.addRecentFile(selected, currentVersionName));
     }
 
     void openFileDirectly(File file) {
+        openFile(file, null);
+    }
+
+    private void openFile(File file, Runnable onSuccess) {
         xdatFile.setValue(file);
         initialDirectory.setValue(file.getParentFile());
 
         try (DataInputStream dis = new DataInputStream(new FileInputStream(file))) {
             int i = Integer.reverseBytes(dis.readInt());
+
             if (i < 0 || i > 0xFFFF) {
                 throw new IOException("File seems to be encrypted.");
             }
@@ -195,7 +164,12 @@ class FileOperationsManager {
                 CountingInputStream cis = new CountingInputStream(new BufferedInputStream(new FileInputStream(file)));
                 try (InputStream is = cis) {
                     xdat.read(is);
-                    Platform.runLater(() -> editor.setXdatObject(xdat));
+
+                    Platform.runLater(() -> {
+                        editor.setXdatObject(xdat);
+                        if (onSuccess != null)
+                            onSuccess.run();
+                    });
                 } catch (Throwable e) {
                     String msg = String.format("Read error before offset 0x%x", cis.getCount());
                     log.log(Level.WARNING, msg, e);
