@@ -78,3 +78,14 @@ The plugin loader and installer are implemented, but the target Wolf `Interface.
 7. validate it in the target client.
 
 Only after that test should p502 be treated as confirmed for this exact client build.
+
+
+## Inspect the bundled Aden package
+
+The repository already contains `xdat_editor/xdat-aden.zip`. Use the read-only recursive inspector before assuming it is useful:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\xdat_editor\tools\inspect-aden-package.ps1 .\xdat_editor\xdat-aden.zip
+```
+
+The script lists interesting entries and recursively inspects nested JAR/ZIP files for `*/XDAT.class` and `versions.csv`.
