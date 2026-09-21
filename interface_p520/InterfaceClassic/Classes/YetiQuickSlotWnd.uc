@@ -12,20 +12,14 @@ var ButtonHandle ReturnScrollSlot_Btn;
 var ButtonHandle ReturnScrollSlotSetting_Btn;
 var ButtonHandle ViewPoint_Reset_Btn;
 var ButtonHandle ViewPoint_180_Btn;
-var AnimTextureHandle ToggleEffect_Anim;
-var ButtonHandle AutoHunt_All_Btn;
 var TextBoxHandle ReturnScrollSlot_num;
 var WindowHandle ReturnScrollSubWnd;
 var ButtonHandle ReturnScroll_Town01_Btn;
 var ButtonHandle ReturnScroll_Town02_Btn;
 var ButtonHandle ReturnScroll_Town03_Btn;
 var ButtonHandle ReturnScroll_Town04_Btn;
-var AutoUseItemWnd AutoUseItemWndScript;
-var AutoPotionWnd AutoPotionWndScript;
-var AutomaticPlay AutomaticPlayScript;
 var array<ReturningSpellbook> returningSpellbookArray;
 var int CURRENTITEMINDEX;
-var bool bAutoBtnToggle;
 
 event OnRegisterEvent()
 {
@@ -33,7 +27,6 @@ event OnRegisterEvent()
 	RegisterEvent(9570);
 	RegisterEvent(2070);
 	RegisterEvent(40);
-	RegisterEvent(11170);
 	return;
 }
 
@@ -52,8 +45,6 @@ function Initialize()
 	ReturnScrollSlot_num = GetTextBoxHandle("YetiQuickSlotWnd.ReturnScrollSlot_num");
 	ViewPoint_Reset_Btn = GetButtonHandle("YetiQuickSlotWnd.ViewPoint_Reset_Btn");
 	ViewPoint_180_Btn = GetButtonHandle("YetiQuickSlotWnd.ViewPoint_180_Btn");
-	AutoHunt_All_Btn = GetButtonHandle("YetiQuickSlotWnd.AutoHunt_All_Btn");
-	ToggleEffect_Anim = GetAnimTextureHandle("YetiQuickSlotWnd.ToggleEffect_Anim");
 	ReturnScrollSubWnd = GetWindowHandle("YetiQuickSlotWnd.ReturnScrollSubWnd");
 	ReturnScroll_Town01_Btn = GetButtonHandle("YetiQuickSlotWnd.ReturnScrollSubWnd.ReturnScroll_Town01_Btn");
 	ReturnScroll_Town02_Btn = GetButtonHandle("YetiQuickSlotWnd.ReturnScrollSubWnd.ReturnScroll_Town02_Btn");
@@ -63,15 +54,11 @@ function Initialize()
 	ReturnScroll_Town02_Btn.SetTooltipType("text");
 	ReturnScroll_Town03_Btn.SetTooltipType("text");
 	ReturnScroll_Town04_Btn.SetTooltipType("text");
-	AutoUseItemWndScript = AutoUseItemWnd(GetScript("AutoUseItemWnd"));
-	AutoPotionWndScript = AutoPotionWnd(GetScript("AutoPotionWnd"));
-	AutomaticPlayScript = AutomaticPlay(GetScript("AutomaticPlay"));
 	return;
 }
 
 event Load()
 {
-	bAutoBtnToggle = false;
 	setServerTypeSetting();
 	return;
 }
@@ -135,9 +122,6 @@ event OnClickButton(string Name)
 		case "ViewPoint_180_Btn":
 			OnViewPoint_180_BtnClick();
 			break;
-		case "AutoHunt_All_Btn":
-			OnAutoHunt_All_BtnClick(true);
-			break;
 		case "ReturnScroll_Town01_Btn":
 		case "ReturnScroll_Town02_Btn":
 		case "ReturnScroll_Town03_Btn":
@@ -156,7 +140,6 @@ event OnClickButton(string Name)
 event OnShow()
 {
 	setServerTypeSetting();
-	SetAutoMode();
 	GetINIInt("YetiQuickSlotWnd", "a", CURRENTITEMINDEX, "WindowsInfo.ini");
 	ReturnScrollSubWnd.HideWindow();
 	syncInventory();
@@ -184,11 +167,7 @@ event OnEvent(int Event_ID, string param)
 			syncInventory();
 			break;
 		case 40:
-			bAutoBtnToggle = false;
-			CURRENTITEMINDEX = -1;
-			break;
-		case 11170:
-			AutoplaySettingHandler(param);
+					CURRENTITEMINDEX = -1;
 			break;
 		default:
 			break;
@@ -210,15 +189,6 @@ function setReturningSpellbookItemID(out array<int> nItemIDArray, string ArraySt
 		nItemIDArray[(nItemIDArray.Length - 1)] = int(strItemIDArray[i]);
 		i++;
 	}
-	return;
-}
-
-function AutoplaySettingHandler(string param)
-{
-	local int nIsAutoPlayOn;
-
-	ParseInt(param, "IsAutoPlayOn", nIsAutoPlayOn);
-	bAutoBtnToggle = numToBool(nIsAutoPlayOn);
 	return;
 }
 
@@ -358,58 +328,6 @@ function setItemButtonByIndex(int Index)
 	return;
 }
 
-function setPlayAutoTargetActiveAnim()
-{
-	if(!Me.IsShowWindow())
-	{
-		return;
-	}
-	if(IsAutoMode())
-	{
-		AnimTexturePlay(ToggleEffect_Anim, true);
-		AutoHunt_All_Btn.SetTexture("L2UI_CT1.YetiWnd.YetiAuto_ON_BTN_Normal", "L2UI_CT1.YetiWnd.YetiAuto_ON_BTN_Down", "L2UI_CT1.YetiWnd.YetiAuto_ON_BTN_Over");
-		eachAutoModeToggleTexture();
-	}
-	else
-	{
-		AnimTextureStop(ToggleEffect_Anim, true);
-		AutoHunt_All_Btn.SetTexture("L2UI_CT1.YetiWnd.YetiAuto_OFF_BTN_Normal", "L2UI_CT1.YetiWnd.YetiAuto_OFF_BTN_Down", "L2UI_CT1.YetiWnd.YetiAuto_OFF_BTN_Over");
-		GetTextureHandle("YetiQuickSlotWnd.Check_AutoTargetIcon").SetTexture("L2UI_CT1.YetiWnd.Yeti_AutoTargetIcon_OFF");
-		GetTextureHandle("YetiQuickSlotWnd.Check_AutopotionIcon").SetTexture("L2UI_CT1.YetiWnd.Yeti_AutopotionIcon_OFF");
-		GetTextureHandle("YetiQuickSlotWnd.Check_AutoUseItemIcon").SetTexture("L2UI_CT1.YetiWnd.Yeti_AutoUseItemIcon_OFF");
-	}
-	return;
-}
-
-function eachAutoModeToggleTexture()
-{
-	if((AutoUseItemWndScript.getUseAutoTarget() || AutomaticPlayScript.getUseAutoTarget()))
-	{
-		GetTextureHandle("YetiQuickSlotWnd.Check_AutoTargetIcon").SetTexture("L2UI_CT1.YetiWnd.Yeti_AutoTargetIcon_ON");
-	}
-	else
-	{
-		GetTextureHandle("YetiQuickSlotWnd.Check_AutoTargetIcon").SetTexture("L2UI_CT1.YetiWnd.Yeti_AutoTargetIcon_OFF");
-	}
-	if((AutoUseItemWndScript.getActivateAll() || AutomaticPlayScript.getActivateAll()))
-	{
-		GetTextureHandle("YetiQuickSlotWnd.Check_AutoUseItemIcon").SetTexture("L2UI_CT1.YetiWnd.Yeti_AutoUseItemIcon_ON");
-	}
-	else
-	{
-		GetTextureHandle("YetiQuickSlotWnd.Check_AutoUseItemIcon").SetTexture("L2UI_CT1.YetiWnd.Yeti_AutoUseItemIcon_OFF");
-	}
-	if(AutoPotionWndScript.getActiveAutoPotionSlot())
-	{
-		GetTextureHandle("YetiQuickSlotWnd.Check_AutopotionIcon").SetTexture("L2UI_CT1.YetiWnd.Yeti_AutopotionIcon_ON");
-	}
-	else
-	{
-		GetTextureHandle("YetiQuickSlotWnd.Check_AutopotionIcon").SetTexture("L2UI_CT1.YetiWnd.Yeti_AutopotionIcon_OFF");
-	}
-	return;
-}
-
 function OnReturnScroll_Town_BtnClick(string buttonName)
 {
 	local string strID;
@@ -491,59 +409,3 @@ function OnViewPoint_180_BtnClick()
 	return;
 }
 
-function OnAutoHunt_All_BtnClick(optional bool bUseAutoPostion)
-{
-	bAutoBtnToggle = !bAutoBtnToggle;
-	if(getInstanceUIData().GetIsLiveServer())
-	{
-		AutoUseItemWndScript.requestAutoPlay(bAutoBtnToggle);
-		Class'NWindow.ShortcutWndAPI'.static.RequestAutomaticUseItemActivateAll(bAutoBtnToggle);
-	}
-	else
-	{
-		AutomaticPlayScript.requestAutoPlay(bAutoBtnToggle);
-	}
-	if(bUseAutoPostion)
-	{
-		Class'NWindow.ShortcutWndAPI'.static.RequestAutomaticUseItemActivate(AutoPotionWndScript.getAutoPotionSlotID(), bAutoBtnToggle);
-	}
-	return;
-}
-
-function bool IsAutoMode()
-{
-	local bool bAutoMode;
-
-	if(((((AutoPotionWndScript.getActiveAutoPotionSlot() || AutoUseItemWndScript.getActivateAll()) || AutoUseItemWndScript.getUseAutoTarget()) || AutomaticPlayScript.getActivateAll()) || AutomaticPlayScript.getUseAutoTarget()))
-	{
-		bAutoMode = true;
-	}
-	return bAutoMode;
-}
-
-function SetAutoMode()
-{
-	if(IsAutoMode())
-	{
-		bAutoBtnToggle = true;
-	}
-	else
-	{
-		bAutoBtnToggle = false;
-	}
-	if(bAutoBtnToggle)
-	{
-		eachAutoModeToggleTexture();
-		AnimTexturePlay(ToggleEffect_Anim, true);
-		AutoHunt_All_Btn.SetTexture("L2UI_CT1.YetiWnd.YetiAuto_ON_BTN_Normal", "L2UI_CT1.YetiWnd.YetiAuto_ON_BTN_Down", "L2UI_CT1.YetiWnd.YetiAuto_ON_BTN_Over");
-	}
-	else
-	{
-		AnimTextureStop(ToggleEffect_Anim, true);
-		AutoHunt_All_Btn.SetTexture("L2UI_CT1.YetiWnd.YetiAuto_OFF_BTN_Normal", "L2UI_CT1.YetiWnd.YetiAuto_OFF_BTN_Down", "L2UI_CT1.YetiWnd.YetiAuto_OFF_BTN_Over");
-		GetTextureHandle("YetiQuickSlotWnd.Check_AutoTargetIcon").SetTexture("L2UI_CT1.YetiWnd.Yeti_AutoTargetIcon_OFF");
-		GetTextureHandle("YetiQuickSlotWnd.Check_AutopotionIcon").SetTexture("L2UI_CT1.YetiWnd.Yeti_AutopotionIcon_OFF");
-		GetTextureHandle("YetiQuickSlotWnd.Check_AutoUseItemIcon").SetTexture("L2UI_CT1.YetiWnd.Yeti_AutoUseItemIcon_OFF");
-	}
-	return;
-}
