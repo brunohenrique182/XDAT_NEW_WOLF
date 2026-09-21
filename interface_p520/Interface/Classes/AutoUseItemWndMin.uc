@@ -3,12 +3,10 @@ class AutoUseItemWndMin extends UICommonAPI;
 var WindowHandle Me;
 var AnimTextureHandle ToggleEffect_Anim;
 var AutoUseItemWnd AutoUseItemWndScript;
-var AnimTextureHandle AutoTargetToggleEffect_Anim;
 
 event OnRegisterEvent()
 {
 	RegisterEvent(3410);
-	RegisterEvent(11620);
 	return;
 }
 
@@ -20,7 +18,6 @@ event OnShow()
 		return;
 	}
 	setPlayActiveAnim();
-	setPlayAutoTargetActiveAnim();
 	return;
 }
 
@@ -34,7 +31,6 @@ function Initialize()
 {
 	Me = GetWindowHandle("AutoUseItemWndMin");
 	ToggleEffect_Anim = GetAnimTextureHandle("AutoUseItemWndMin.AutoAllON_Win.ToggleEffect_Anim");
-	AutoTargetToggleEffect_Anim = GetAnimTextureHandle("AutoUseItemWndMin.AutoTargetWndMin_window.AutoTargetAllON_Win.ToggleEffect_Anim");
 	AutoUseItemWndScript = AutoUseItemWnd(GetScript("AutoUseItemWnd"));
 	return;
 }
@@ -55,9 +51,6 @@ event OnEvent(int Event_ID, string param)
 					getInstanceL2Util().syncWindowLoc("AutoUseItemWndMin", "AutoUseItemWnd", -115, -98);
 				}
 			}
-			break;
-		case 11620:
-			HandleUpdatePlayerAutoAttacking();
 			break;
 		default:
 			break;
@@ -94,9 +87,6 @@ event OnClickButton(string Name)
 			Me.HideWindow();
 			OnClickButton("WinExpandButton_Button");
 			break;
-		case "AutoTarget_AutoAll_BTN":
-			AutoUseItemWndScript.OnClickButton("AutoTargetAll_BTN");
-			break;
 		default:
 			break;
 	}
@@ -126,28 +116,12 @@ function setPlayActiveAnim()
 
 function setPlayAutoTargetActiveAnim()
 {
-	if(!Me.IsShowWindow())
-	{
-		return;
-	}
-	if(AutoUseItemWndScript.getUseAutoTarget())
-	{
-		AnimTexturePlay(AutoTargetToggleEffect_Anim, true);
-		GetWindowHandle("AutoUseItemWndMin.AutoTargetWndMin_window.AutoTargetAllON_Win").ShowWindow();
-		GetWindowHandle("AutoUseItemWndMin.AutoTargetWndMin_window.AutoTargetAllOFF_Win").HideWindow();
-	}
-	else
-	{
-		AnimTextureStop(AutoTargetToggleEffect_Anim, true);
-		GetWindowHandle("AutoUseItemWndMin.AutoTargetWndMin_window.AutoTargetAllON_Win").HideWindow();
-		GetWindowHandle("AutoUseItemWndMin.AutoTargetWndMin_window.AutoTargetAllOFF_Win").ShowWindow();
-	}
+	// Compatibility no-op: Auto Target UI was removed.
 	return;
 }
 
 function setShortcutTooltip(string tooltipStr)
 {
-	GetButtonHandle("AutoUseItemWndMin.AutoTargetWndMin_window.AutoTarget_AutoAll_BTN").SetTooltipCustomType(MakeTooltipMultiText(GetSystemString(2165), getInstanceL2Util().White, , true, tooltipStr, getInstanceL2Util().BWhite, , true));
 	return;
 }
 
