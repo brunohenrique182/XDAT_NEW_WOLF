@@ -6,12 +6,23 @@ import acmi.l2.clientmod.util.Type
 import acmi.l2.clientmod.util.defaultio.DefaultIO
 import groovy.beans.Bindable
 
+/**
+ * Wolf Waker / p520 ComboBox.
+ *
+ * Validated against 94 ComboBox instances in the supplied Interface.xdat.
+ * p520 adds one 32-bit field BEFORE the legacy values list.
+ *
+ * This matters because empty ComboBoxes looked compatible by coincidence:
+ *   modernHead=0, listCount=0
+ * while controls such as BoneName_ComboBox contain:
+ *   modernHead=25, listCount=0.
+ */
 @Bindable
 class ComboBox extends DefaultProperty {
+    int modernHead
+
     @Type(ComboBoxElement.class)
     List<ComboBoxElement> values = []
-
-    int modernTail
 
     @Bindable
     @DefaultIO
@@ -28,16 +39,16 @@ class ComboBox extends DefaultProperty {
     @Override
     ComboBox read(InputStream input) {
         super.read(input)
+        modernHead = input.readInt()
         values = input.readList(ComboBoxElement)
-        modernTail = input.readInt()
         this
     }
 
     @Override
     ComboBox write(OutputStream output) {
         super.write(output)
+        output.writeInt(modernHead)
         output.writeList(values)
-        output.writeInt(modernTail)
         this
     }
 }
