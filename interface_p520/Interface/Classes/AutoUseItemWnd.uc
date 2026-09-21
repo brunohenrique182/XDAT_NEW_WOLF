@@ -769,21 +769,19 @@ function Autotarget_UpdateAutoTargetState()
 	return;
 }
 
-function requestAutoPlay(bool bUseAutoTarget, optional int nHPPotionPercent)
+function requestAutoPlay(bool bUseAutoTarget, optional int nHPPotionPercent, optional int nHPPetPotionPercent)
 {
 	local AutoplaySettingData pAutoplaySettingData;
 
-	// Auto Hunt removed: this compatibility helper can update potion data,
-	// but it can never enable automatic target/combat.
+	// Auto Hunt removed: this helper is retained only for potion settings.
+	// Every automatic targeting/combat field is forced off.
 	bUseAutoTarget = false;
-
-	autotarget_nTargetMode = GetNextTargetModeOption();
-	pAutoplaySettingData.IsAutoPlayOn = bUseAutoTarget;
-	pAutoplaySettingData.IsPickupOn = autotarget_bIsPickupOn;
-	pAutoplaySettingData.NextTargetMode = EAutoNextTargetMode(autotarget_nTargetMode);
-	pAutoplaySettingData.IsNearTargetMode = autotarget_bShortTarget;
-	pAutoplaySettingData.IsMannerModeOn = autotarget_bIsMannerModeOn;
-	pAutoplaySettingData.MacroIndex = byte(nMacroSlotSelect);
+	pAutoplaySettingData.IsAutoPlayOn = false;
+	pAutoplaySettingData.IsPickupOn = false;
+	pAutoplaySettingData.NextTargetMode = EAutoNextTargetMode(0);
+	pAutoplaySettingData.IsNearTargetMode = false;
+	pAutoplaySettingData.IsMannerModeOn = false;
+	pAutoplaySettingData.MacroIndex = byte(0);
 	if((nHPPotionPercent > 0))
 	{
 		pAutoplaySettingData.HPPotionPercent = nHPPotionPercent;
@@ -791,6 +789,10 @@ function requestAutoPlay(bool bUseAutoTarget, optional int nHPPotionPercent)
 	else
 	{
 		pAutoplaySettingData.HPPotionPercent = autotarget_nHPPotionPercent;
+	}
+	if((nHPPetPotionPercent > 0))
+	{
+		pAutoplaySettingData.HPPetPotionPercent = nHPPetPotionPercent;
 	}
 	Debug("------------------------------------------------------------------");
 	Debug("API -각성-- UpdateAutoplaySetting()");  // EN?: API - Awakening-- UpdateAutoplaySetting ()
@@ -808,6 +810,18 @@ function requestAutoPlay(bool bUseAutoTarget, optional int nHPPotionPercent)
 function requestAutoPlayForAutoPotion(int nHPPotionPercent)
 {
 	requestAutoPlay(false, nHPPotionPercent);
+	return;
+}
+
+function requestAutoPlayForAutoPotionPet(int nHPPetPotionPercent)
+{
+	requestAutoPlay(false, 0, nHPPetPotionPercent);
+	return;
+}
+
+function requestAutoPlayForAutoPotionWithPet(int nHPPotionPercent, int nHPPetPotionPercent)
+{
+	requestAutoPlay(false, nHPPotionPercent, nHPPetPotionPercent);
 	return;
 }
 
