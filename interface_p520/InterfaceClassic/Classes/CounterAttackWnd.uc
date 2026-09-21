@@ -8,7 +8,6 @@ var string m_Windowname;
 var int clickedX;
 var int clickedY;
 var bool OnMousePressed;
-var AutoUseItemWnd AutoUseItemWndScript;
 
 function OnRegisterEvent()
 {
@@ -20,7 +19,6 @@ function OnRegisterEvent()
 function OnLoad()
 {
 	Me = GetWindowHandle(m_Windowname);
-	AutoUseItemWndScript = AutoUseItemWnd(GetScript("AutoUseItemWnd"));
 	return;
 }
 
@@ -70,10 +68,6 @@ function OnClickButton(string Name)
 			if(((GetAbs((clickedX - rectWnd.nX)) > 3) || ((clickedY - rectWnd.nY) > 3)))
 			{
 				return;
-			}
-			if(AutoUseItemWndScript.autotarget_bUseAutoTarget)
-			{
-				AutoUseItemWndScript.requestAutoPlay(false);
 			}
 			SelectCounterAttackTarget();
 			break;
