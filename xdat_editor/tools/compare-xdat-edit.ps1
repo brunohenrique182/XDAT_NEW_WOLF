@@ -160,8 +160,13 @@ $markers = @(
     "AutoTargetWndMin_window",
     "ToggleEffect_Anim",
     "Check_AutoTargetIcon",
+    "AutoUseItemWnd",
+    "AutoUseItemWndMin",
+    "AutoUseItemInventory",
+    "Check_AutoUseItemIcon",
     "AutoPlay",
     "YetiQuickSlotWnd",
+    "AutoPotionWnd",
     "RelicSummonWnd",
     "Varkas"
 )
