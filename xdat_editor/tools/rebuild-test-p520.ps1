@@ -37,6 +37,29 @@ Write-Host "Java   : $JavaHome"
 Write-Host "JavaFX : $JavaFxHome"
 Write-Host ""
 
+
+# Windows keeps dependency JARs locked while a previous XDAT Editor JVM is alive.
+# Stop only Java processes whose command line belongs to this editor.
+$editorProcesses = @(
+    Get-CimInstance Win32_Process -Filter "Name='java.exe'" -ErrorAction SilentlyContinue |
+        Where-Object {
+            $_.CommandLine -and
+            $_.CommandLine -match 'xdat-editor-1[.]6[.]2[.]jar'
+        }
+)
+
+if ($editorProcesses.Count -gt 0) {
+    Write-Host "Stopping previous XDAT Editor process(es) before rebuild..." -ForegroundColor Yellow
+
+    foreach ($process in $editorProcesses) {
+        Write-Host ("  PID {0}: {1}" -f $process.ProcessId, $process.CommandLine) -ForegroundColor DarkGray
+        Stop-Process -Id $process.ProcessId -Force -ErrorAction Stop
+    }
+
+    # Give Windows a moment to release loaded JAR handles.
+    Start-Sleep -Milliseconds 750
+}
+
 Push-Location $repoRoot
 try {
     & $ant -f ".\xdat_editor\build.xml" clean dist "-Djavafx.sdk=$JavaFxHome"
