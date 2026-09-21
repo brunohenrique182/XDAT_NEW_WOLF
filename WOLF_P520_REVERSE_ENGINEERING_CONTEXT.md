@@ -1833,3 +1833,99 @@ Interface_NoAutoHunt_FULL.xdat
 ```
 
 Esse XDAT deve ser usado junto com o `Interface.u` recompilado do mesmo head da branch.
+
+
+---
+
+# 22. Auto Hunt ainda visível — causa confirmada no InterfaceClassic
+
+Evidência visual real do cliente mostrou o painel compacto **Auto-hunting** ainda presente dentro da HUD Yeti mesmo após a primeira remoção no `Interface.xdat`.
+
+A causa foi localizada na variante Classic:
+
+```text
+interface_p520/Interface/Classes/YetiQuickSlotWnd.uc
+    -> já estava limpo
+
+interface_p520/InterfaceClassic/Classes/YetiQuickSlotWnd.uc
+    -> ainda continha AutoHunt_All_Btn / AutomaticPlay / Auto Target
+```
+
+O cliente dessa configuração usa a variante Classic para essa HUD, portanto limpar apenas o `Interface.xdat` / source normal não é suficiente.
+
+## Source Classic alinhada com a versão sem Auto Hunt
+
+Os seguintes scripts de `InterfaceClassic` foram sincronizados com as versões já limpas de `Interface`:
+
+```text
+AutoPotionSubWnd.uc
+AutoPotionSubWndPet.uc
+AutoPotionWnd.uc
+AutoUseItemWnd.uc
+AutoUseItemWndMin.uc
+MenuEntireWnd.uc
+Shortcut.uc
+YetiPCModeChangeWnd.uc
+YetiQuickSlotWnd.uc
+```
+
+Isso remove os hooks ativos que ainda:
+
+- chamavam `YetiQuickSlotWnd.OnAutoHunt_All_BtnClick()`;
+- abriam/fechavam `AutomaticPlay`;
+- atualizavam `setPlayAutoTargetActiveAnim()`;
+- encaminhavam Auto Potion pelo `AutomaticPlay`;
+- configuravam tooltip do AutoPlay pela `MenuEntireWnd`.
+
+`InterfaceClassic/Classes/AutomaticPlay.uc` foi reduzido a um stub inerte de compatibilidade. Ele não registra eventos, não abre UI e não liga Auto Hunt/Auto Target. Mantê-lo como shell evita quebrar referências indiretas antigas durante a transição.
+
+## XDATs que precisam ser limpos
+
+A remoção estrutural completa deve ser aplicada aos dois originais:
+
+```text
+Interface.xdat
+InterfaceClassic.xdat
+```
+
+Usar:
+
+```text
+xdat_editor/tools/p520-remove-autohunt.groovy
+```
+
+O script remove:
+
+```text
+AutomaticPlay (top-level)
+YetiQuickSlotWnd.AutoHunt_All_Btn
+YetiQuickSlotWnd.ToggleEffect_Anim
+YetiQuickSlotWnd.Check_AutoTargetIcon
+AutoUseItemWnd.AutoTargetWnd
+AutoUseItemWndMin.AutoTargetWndMin_window
+WndDefPos de AutomaticPlay
+atalhos AutoPlay
+```
+
+e preserva Auto Potion / Auto Use Item.
+
+## CI endurecido
+
+`.github/workflows/p520-schema-ci.yml` agora:
+
+1. compila `Interface.u`;
+2. compila `InterfaceClassic.u`;
+3. publica ambos no mesmo artifact;
+4. falha se hooks ativos proibidos de Auto Hunt voltarem à source Classic.
+
+Isso evita repetir o estado em que Interface normal estava limpo, mas InterfaceClassic ainda mantinha Auto Hunt.
+
+## Próxima validação real
+
+1. gerar `Interface_NoAutoHunt_FULL.xdat` a partir do original;
+2. gerar `InterfaceClassic_NoAutoHunt_FULL.xdat` a partir do original Classic;
+3. instalar os dois XDATs com seus nomes originais no cliente;
+4. instalar `Interface.u` e `InterfaceClassic.u` rebuildados;
+5. abrir o cliente;
+6. confirmar que **Auto-hunting** desapareceu;
+7. confirmar que **Auto-use supplies / Auto Potion / Auto Use Item** continuam funcionais.
