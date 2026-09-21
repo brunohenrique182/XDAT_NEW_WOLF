@@ -8,3 +8,6 @@ build/
 
 # Mac
 .DS_Store
+
+# External XDAT schema plugins (downloaded locally, not redistributed)
+schema-plugins/
