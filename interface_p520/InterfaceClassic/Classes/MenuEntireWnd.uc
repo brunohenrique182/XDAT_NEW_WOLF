@@ -304,7 +304,7 @@ function configurationMenuData(optional bool bGamingStateEnter)
 	{
 		if(isAden)
 		{
-			setList(0, 14063, "WorldExchangeBuyWnd", "", !Class'InterfaceClassic.WorldExchangeBuyWnd'.static.Inst().ChkUseableServerID(), GetColor(255, 211, 102, 255));
+			setList(0, 14063, "WorldExchangeBuyWnd", "", !Class'Interface.WorldExchangeBuyWnd'.static.Inst().ChkUseableServerID(), GetColor(255, 211, 102, 255));
 			setList(0, 3634, "NShop", "IngameWebWnd", !isKorean, GetColor(255, 211, 102, 255));
 			setList(0, 2469, "Productinven", "", !GetINIBool2Bool("PrimeShop", "UseGoodsInventory"), GetColor(255, 211, 102, 255));
 			setList(0, 3932, "LShop", "", !isKorean, GetColor(255, 211, 102, 255));
@@ -393,7 +393,7 @@ function configurationMenuData(optional bool bGamingStateEnter)
 	}
 	else if(isAden)
 	{
-		setList(0, 14063, "WorldExchangeBuyWnd", "", !Class'InterfaceClassic.WorldExchangeBuyWnd'.static.Inst().ChkUseableServerID(), GetColor(255, 211, 102, 255));
+		setList(0, 14063, "WorldExchangeBuyWnd", "", !Class'Interface.WorldExchangeBuyWnd'.static.Inst().ChkUseableServerID(), GetColor(255, 211, 102, 255));
 		setList(0, 2469, "Productinven", "", !GetINIBool2Bool("PrimeShop", "UseGoodsInventory"), GetColor(255, 211, 102, 255));
 		setList(0, 3932, "LShop", "", , GetColor(255, 211, 102, 255));
 		setList(0, 387, "BBS", "BoardWnd");
@@ -611,15 +611,15 @@ function onMenuClick(string MenuName)
 		case "WorldExchangeBuyWnd":
 			if(GetWindowHandle("WorldExchangeBuyWnd").IsShowWindow())
 			{
-				Class'InterfaceClassic.WorldExchangeBuyWnd'.static.Inst()._Hide();
+				Class'Interface.WorldExchangeBuyWnd'.static.Inst()._Hide();
 			}
 			else if(GetWindowHandle("WorldExchangeRegiWnd").IsShowWindow())
 			{
-				Class'InterfaceClassic.WorldExchangeRegiWnd'.static.Inst()._Hide();
+				Class'Interface.WorldExchangeRegiWnd'.static.Inst()._Hide();
 			}
 			else
 			{
-				Class'InterfaceClassic.WorldExchangeBuyWnd'.static.Inst()._Show();
+				Class'Interface.WorldExchangeBuyWnd'.static.Inst()._Show();
 			}
 			break;
 		case "ElementalSpiritWnd":
@@ -660,13 +660,13 @@ function onMenuClick(string MenuName)
 			}
 			break;
 		case "RelicWnd":
-			if(Class'InterfaceClassic.RelicWnd'.static.Inst().IsShowAndVisible())
+			if(Class'Interface.RelicWnd'.static.Inst().IsShowAndVisible())
 			{
-				Class'InterfaceClassic.RelicWnd'.static.Inst().CloseWindow();
+				Class'Interface.RelicWnd'.static.Inst().CloseWindow();
 			}
 			else
 			{
-				Class'InterfaceClassic.RelicWnd'.static.Inst().OpenWindow();
+				Class'Interface.RelicWnd'.static.Inst().OpenWindow();
 			}
 			break;
 		default:
@@ -1784,7 +1784,7 @@ function addMenu(int CategoryIndex, string buttonText, string MenuName, string t
 	menuSlotArray[CategoryIndex].MenuButtonSlotStructArray[buttonIndex].MenuName = MenuName;
 	menuSlotArray[CategoryIndex].MenuButtonSlotStructArray[buttonIndex].nBGTextureIndex = bgType;
 	menuSlotArray[CategoryIndex].MenuButtonSlotStructArray[buttonIndex].buttonTextColor = TextColor;
-	Class'InterfaceClassic.L2Util'.static.GetEllipsisString(buttonText, 110);
+	Class'Interface.L2Util'.static.GetEllipsisString(buttonText, 110);
 	menuSlotArray[CategoryIndex].MenuButtonSlotStructArray[buttonIndex].buttonText = buttonText;
 	menuSlotArray[CategoryIndex].MenuButtonSlotStructArray[buttonIndex].tooltipKey = tooltipKey;
 	menuSlotArray[CategoryIndex].MenuButtonSlotStructArray[buttonIndex].SpecialParam = SpecialParam;
@@ -1942,15 +1942,6 @@ function refreshMenu()
 		i++;
 	}
 	resizeMenuWnd();
-	if(getInstanceUIData().GetIsLiveServer())
-	{
-		AutoUseItemWnd(GetScript("AutoUseItemWnd")).setShortcutTooltip(getTooltipShortcutAutoPlay());
-		AutoUseItemWndMin(GetScript("AutoUseItemWndMin")).setShortcutTooltip(getTooltipShortcutAutoPlay());
-	}
-	else
-	{
-		AutomaticPlay(GetScript("AutomaticPlay")).setShortcutTooltip(getTooltipShortcutAutoPlay());
-	}
 	Menu(GetScript("Menu")).setBTN();
 	return;
 }
@@ -1985,7 +1976,7 @@ function resizeMenuWnd()
 
 function ShowByShortcutFunction(string MenuName)
 {
-	Class'InterfaceClassic.Shortcut'.static.Inst()._ExeShowHideWIndow(MenuName);
+	Class'Interface.Shortcut'.static.Inst()._ExeShowHideWIndow(MenuName);
 	return;
 }
 
@@ -2086,11 +2077,11 @@ function OlympiadRandomChallengeMenu()
 	local UIPacket._C_EX_OLYMPIAD_UI packet;
 
 	packet.cGameRuleType = 0;
-	if(!Class'InterfaceClassic.UIPacket'.static.Encode_C_EX_OLYMPIAD_UI(stream, packet))
+	if(!Class'Interface.UIPacket'.static.Encode_C_EX_OLYMPIAD_UI(stream, packet))
 	{
 		return;
 	}
-	Class'InterfaceClassic.UIPacket'.static.RequestUIPacket(626, stream);
+	Class'Interface.UIPacket'.static.RequestUIPacket(626, stream);
 	return;
 }
 
