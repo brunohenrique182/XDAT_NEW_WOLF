@@ -5,7 +5,6 @@ const AUTO_ITEM_SHORTCUT_PAGE = 22;
 
 var WindowHandle Me;
 var AutoUseItemWndMin AutoUseItemWndMinScript;
-var YetiQuickSlotWnd YetiQuickSlotwndScript;
 var int nMinimal;
 var AnimTextureHandle ToggleEffect_Anim;
 var AutoUseItemInventory AutoUseItemInventoryScript;
@@ -38,11 +37,6 @@ event OnRegisterEvent()
 	RegisterEvent(694);
 	RegisterEvent(630);
 	RegisterEvent(650);
-	RegisterEvent(11170);
-	RegisterEvent(11030);
-	RegisterEvent(5720);
-	RegisterEvent(11152);
-	RegisterEvent(11620);
 	return;
 }
 
@@ -58,19 +52,8 @@ function Initialize()
 	ToggleEffect_Anim = GetAnimTextureHandle("AutoUseItemWnd.AutoAllON_Win.ToggleEffect_Anim");
 	AutoUseItemInventoryScript = AutoUseItemInventory(GetScript("AutoUseItemInventory"));
 	AutoUseItemWndMinScript = AutoUseItemWndMin(GetScript("AutoUseItemWndMin"));
-	YetiQuickSlotwndScript = YetiQuickSlotWnd(GetScript("YetiQuickSlotwnd"));
-	AutoTarget_ToggleMacro_Anim = GetAnimTextureHandle("AutoUseItemWnd.AutoTargetWnd.ToggleMacro_Anim");
-	shotD_Target_BTN = GetButtonHandle("AutoUseItemWnd.AutoTargetWnd.shotD_Target_BTN");
-	Next_Target_BTN = GetButtonHandle("AutoUseItemWnd.AutoTargetWnd.Next_Target_BTN");
-	MacroSelectBtn_01 = GetButtonHandle("AutoUseItemWnd.AutoTargetWnd.MacroSelectBtn_01");
-	MacroSelectBtn_02 = GetButtonHandle("AutoUseItemWnd.AutoTargetWnd.MacroSelectBtn_02");
-	TargetPickupToggle_BTN = GetButtonHandle("AutoUseItemWnd.AutoTargetWnd.TargetPickupToggle_BTN");
-	TargetMannerToggle_BTN = GetButtonHandle("AutoUseItemWnd.AutoTargetWnd.TargetMannerToggle_BTN");
-	TargetStatusWndScript = GetWindowHandle("TargetStatusWnd");
-	AutoTargetAllON_Win = GetWindowHandle("AutoUseItemWnd.AutoTargetWnd.AutoTargetAllON_Win");
-	AutoTargetAllON_ToggleEffect_Anim = GetAnimTextureHandle("AutoUseItemWnd.AutoTargetWnd.AutoTargetAllON_Win.ToggleEffect_Anim");
-	ActiveSlotArrayMap = new Class'InterfaceClassic.UIMapInt64Object';
-	ItemInfoSlotArrayMap = new Class'InterfaceClassic.UIMapInt64Object';
+	ActiveSlotArrayMap = new Class'Interface.UIMapInt64Object';
+	ItemInfoSlotArrayMap = new Class'Interface.UIMapInt64Object';
 	return;
 }
 
@@ -82,13 +65,6 @@ event OnShow()
 		return;
 	}
 	setPlayActiveAnim();
-	AutotargetOnShow();
-	Autotarget_UpdateAutoTargetState();
-	Autotarget_SetCusomTooltip();
-	Autotarget_updatePickupButton();
-	Autotarget_PickupSetCusomTooltip();
-	Autotarget_updateMannerModeButton();
-	Autotarget_MannerModeSetCusomTooltip();
 	return;
 }
 
@@ -97,7 +73,6 @@ function initAll()
 	initSlotArray();
 	HandleShortcutPageUpdateAll();
 	bActivateAll = false;
-	YetiQuickSlotwndScript.setPlayAutoTargetActiveAnim();
 	checkMinimal();
 	return;
 }
@@ -152,56 +127,19 @@ event OnEvent(int Event_ID, string param)
 			initSlotArray();
 			bActivateAll = false;
 			nMinimal = 0;
-			Autotarget_Init();
 			break;
 		case 694:
 			ShortcutAutomaticUseActivatedHandler(param);
-			YetiQuickSlotwndScript.setPlayAutoTargetActiveAnim();
 			break;
 		case 630:
 			HandleShortcutUpdate(param);
 			break;
 		case 650:
 			initAll();
-			Autotarget_Init();
-			Autotarget_UpdateShortCutElement();
-			break;
-		case 11170:
-			Debug(("EV_AutoplaySetting" @ param));
-			AutoplaySettingHandler(param);
-			break;
-		case 11030:
-		case 5720:
-			NextTargetModeHandler();
-			break;
-		case 11152:
-			if(autotarget_bUseAutoTarget)
-			{
-				requestAutoPlay(false);
-			}
-			break;
-		case 11620:
-			HandleUpdatePlayerAutoAttacking();
 			break;
 		default:
 			break;
 	}
-	return;
-}
-
-function NextTargetModeHandler()
-{
-	local UIEventManager.EAutoNextTargetMode nTargetMode;
-
-	nTargetMode = GetNextTargetModeOption();
-	if((int(autotarget_nTargetMode) != int(nTargetMode)))
-	{
-		if(autotarget_bUseAutoTarget)
-		{
-			requestAutoPlay(autotarget_bUseAutoTarget);
-		}
-	}
-	Autotarget_NextTargetSetCusomTooltip();
 	return;
 }
 
@@ -272,19 +210,6 @@ function HandleShortcutUpdate(string param)
 		}
 		setCheckActivateAll();
 		setPlayActiveAnim();
-		YetiQuickSlotwndScript.setPlayAutoTargetActiveAnim();
-	}
-	else if((nShortcutID == 276))
-	{
-		Class'NWindow.UIAPI_SHORTCUTITEMWINDOW'.static.UpdateShortcut("AutoUseItemWnd.AutoTargetWnd.Macro1ShortcutItem", 276);
-	}
-	else if((nShortcutID == 279))
-	{
-		Class'NWindow.UIAPI_SHORTCUTITEMWINDOW'.static.UpdateShortcut("AutoUseItemWnd.AutoTargetWnd.Macro2ShortcutItem", 279);
-	}
-	if((autotarget_bUseAutoTarget && ((nShortcutID == 276) || (nShortcutID == 279))))
-	{
-		requestAutoPlay(false);
 	}
 	return;
 }
@@ -322,7 +247,6 @@ function ShortcutAutomaticUseActivatedHandler(string param)
 		setCheckActivateAll();
 		setPlayActiveAnim();
 		AutoUseItemWndMinScript.setPlayActiveAnim();
-		YetiQuickSlotwndScript.setPlayAutoTargetActiveAnim();
 	}
 	return;
 }
@@ -424,43 +348,6 @@ function OnClickButton(string Name)
 			break;
 		case "MacroWnd_Button":
 			ExecuteEvent(1230);
-			break;
-		case "ShotD_Target_BTN":
-			Autotarget_OnSwap_Target_BTNClick();
-			if(autotarget_bUseAutoTarget)
-			{
-				requestAutoPlay(autotarget_bUseAutoTarget);
-			}
-			break;
-		case "TargetPickupToggle_BTN":
-			Autotarget_TargetPickupToggle_BTNClick();
-			if(autotarget_bUseAutoTarget)
-			{
-				requestAutoPlay(autotarget_bUseAutoTarget);
-			}
-			break;
-		case "TargetMannerToggle_BTN":
-			Autotarget_TargetMannerToggle_BTNClick();
-			if(autotarget_bUseAutoTarget)
-			{
-				requestAutoPlay(autotarget_bUseAutoTarget);
-			}
-			break;
-		case "AutoTargetAll_BTN":
-			requestAutoPlay(!autotarget_bUseAutoTarget);
-			break;
-		case "Next_Target_BTN":
-			Autotarget_OnNext_Target_BTNClick();
-			break;
-		case "MacroSelectBtn_01":
-		case "MacroSelectBtn_02":
-			MacroSelectBtn_Click(Name);
-			SetMacroSlotSelect();
-			if(((Name == "MacroSelectBtn_01") || (Name == "MacroSelectBtn_02")))
-			{
-				Debug("-_-");
-				requestAutoPlay(false);
-			}
 			break;
 		default:
 			break;
@@ -737,23 +624,16 @@ function Autotarget_MannerModeSetCusomTooltip()
 
 function OnRButtonUp(WindowHandle a_WindowHandle, int X, int Y)
 {
-	switch(a_WindowHandle.GetWindowName())
+	if(("AutoAll_BTN" == a_WindowHandle.GetWindowName()))
 	{
-		case "AutoTargetAll_BTN":
-			requestAutoPlay(!autotarget_bUseAutoTarget);
-			break;
-		case "AutoAll_BTN":
-			OnClickButton(a_WindowHandle.GetWindowName());
-			break;
-		default:
-			break;
+		OnClickButton(a_WindowHandle.GetWindowName());
 	}
 	return;
 }
 
 function bool getUseAutoTarget()
 {
-	return autotarget_bUseAutoTarget;
+	return false;
 }
 
 function Autotarget_OnSwap_Target_BTNClick()
@@ -863,21 +743,22 @@ function Autotarget_UpdateAutoTargetState()
 		GetWindowHandle("AutoUseItemWnd.AutoTargetWnd.AutoTargetAllOFF_Win").ShowWindow();
 	}
 	AutoUseItemWndMinScript.setPlayAutoTargetActiveAnim();
-	YetiQuickSlotwndScript.setPlayAutoTargetActiveAnim();
 	return;
 }
 
-function requestAutoPlay(bool bUseAutoTarget, optional int nHPPotionPercent)
+function requestAutoPlay(bool bUseAutoTarget, optional int nHPPotionPercent, optional int nHPPetPotionPercent)
 {
 	local AutoplaySettingData pAutoplaySettingData;
 
-	autotarget_nTargetMode = GetNextTargetModeOption();
-	pAutoplaySettingData.IsAutoPlayOn = bUseAutoTarget;
-	pAutoplaySettingData.IsPickupOn = autotarget_bIsPickupOn;
-	pAutoplaySettingData.NextTargetMode = EAutoNextTargetMode(autotarget_nTargetMode);
-	pAutoplaySettingData.IsNearTargetMode = autotarget_bShortTarget;
-	pAutoplaySettingData.IsMannerModeOn = autotarget_bIsMannerModeOn;
-	pAutoplaySettingData.MacroIndex = byte(nMacroSlotSelect);
+	// Auto Hunt removed: this helper is retained only for potion settings.
+	// Every automatic targeting/combat field is forced off.
+	bUseAutoTarget = false;
+	pAutoplaySettingData.IsAutoPlayOn = false;
+	pAutoplaySettingData.IsPickupOn = false;
+	pAutoplaySettingData.NextTargetMode = EAutoNextTargetMode(0);
+	pAutoplaySettingData.IsNearTargetMode = false;
+	pAutoplaySettingData.IsMannerModeOn = false;
+	pAutoplaySettingData.MacroIndex = byte(0);
 	if((nHPPotionPercent > 0))
 	{
 		pAutoplaySettingData.HPPotionPercent = nHPPotionPercent;
@@ -885,6 +766,10 @@ function requestAutoPlay(bool bUseAutoTarget, optional int nHPPotionPercent)
 	else
 	{
 		pAutoplaySettingData.HPPotionPercent = autotarget_nHPPotionPercent;
+	}
+	if((nHPPetPotionPercent > 0))
+	{
+		pAutoplaySettingData.HPPetPotionPercent = nHPPetPotionPercent;
 	}
 	Debug("------------------------------------------------------------------");
 	Debug("API -각성-- UpdateAutoplaySetting()");  // EN?: API - Awakening-- UpdateAutoplaySetting ()
@@ -901,13 +786,24 @@ function requestAutoPlay(bool bUseAutoTarget, optional int nHPPotionPercent)
 
 function requestAutoPlayForAutoPotion(int nHPPotionPercent)
 {
-	requestAutoPlay(autotarget_bUseAutoTarget, nHPPotionPercent);
+	requestAutoPlay(false, nHPPotionPercent);
+	return;
+}
+
+function requestAutoPlayForAutoPotionPet(int nHPPetPotionPercent)
+{
+	requestAutoPlay(false, 0, nHPPetPotionPercent);
+	return;
+}
+
+function requestAutoPlayForAutoPotionWithPet(int nHPPotionPercent, int nHPPetPotionPercent)
+{
+	requestAutoPlay(false, nHPPotionPercent, nHPPetPotionPercent);
 	return;
 }
 
 function setShortcutTooltip(string tooltipStr)
 {
-	GetButtonHandle("AutoUseItemWnd.AutoTargetWnd.AutoTargetAll_BTN").SetTooltipCustomType(MakeTooltipMultiText(GetSystemString(2165), getInstanceL2Util().White, , true, tooltipStr, getInstanceL2Util().BWhite, , true));
 	return;
 }
 
