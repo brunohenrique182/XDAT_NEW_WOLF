@@ -143,22 +143,6 @@ event OnEvent(int Event_ID, string param)
 	return;
 }
 
-function NextTargetModeHandler()
-{
-	local UIEventManager.EAutoNextTargetMode nTargetMode;
-
-	nTargetMode = GetNextTargetModeOption();
-	if((int(autotarget_nTargetMode) != int(nTargetMode)))
-	{
-		if(autotarget_bUseAutoTarget)
-		{
-			requestAutoPlay(autotarget_bUseAutoTarget);
-		}
-	}
-	Autotarget_NextTargetSetCusomTooltip();
-	return;
-}
-
 function AutoplaySettingHandler(string param)
 {
 	local int nIsAutoPlayOn, nNextTargetMode, nIsNearTargetMode, nIsPickupOn, nHPPotionPercent, nIsMannerModeOn, nMacroIndex;
@@ -640,16 +624,9 @@ function Autotarget_MannerModeSetCusomTooltip()
 
 function OnRButtonUp(WindowHandle a_WindowHandle, int X, int Y)
 {
-	switch(a_WindowHandle.GetWindowName())
+	if(("AutoAll_BTN" == a_WindowHandle.GetWindowName()))
 	{
-		case "AutoTargetAll_BTN":
-			requestAutoPlay(!autotarget_bUseAutoTarget);
-			break;
-		case "AutoAll_BTN":
-			OnClickButton(a_WindowHandle.GetWindowName());
-			break;
-		default:
-			break;
+		OnClickButton(a_WindowHandle.GetWindowName());
 	}
 	return;
 }
