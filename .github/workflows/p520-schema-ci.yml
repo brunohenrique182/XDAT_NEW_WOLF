@@ -40,12 +40,18 @@ jobs:
         shell: cmd
         run: call interface_p520\Build_Interface.bat
 
-      - name: Upload rebuilt Interface.u
+      - name: Compile p520 InterfaceClassic.u
+        shell: cmd
+        run: call interface_p520\Build_InterfaceClassic.bat
+
+      - name: Upload rebuilt Interface packages
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: p520-interface-u
-          path: interface_p520/Build/Interface.u
+          name: p520-interface-packages
+          path: |
+            interface_p520/Build/Interface.u
+            interface_p520/Build/InterfaceClassic.u
           retention-days: 7
 
       - name: Upload UCC logs
