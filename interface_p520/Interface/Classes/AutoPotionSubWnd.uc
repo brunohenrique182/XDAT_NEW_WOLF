@@ -170,14 +170,7 @@ function checkRecoverAutoPlayHpPoint()
 		{
 			nHpPetPoint = 80;
 		}
-		if(getInstanceUIData().GetIsLiveServer())
-		{
-			AutoUseItemWnd(GetScript("AutoUseItemWnd")).requestAutoPlayForAutoPotion(nHpPoint);
-		}
-		else
-		{
-			AutomaticPlay(GetScript("AutomaticPlay")).requestAutoPlayForAutoPotionWithPet(nHpPoint, nHpPetPoint);
-		}
+		AutoUseItemWnd(GetScript("AutoUseItemWnd")).requestAutoPlayForAutoPotionWithPet(nHpPoint, nHpPetPoint);
 	}
 	return;
 }
@@ -295,14 +288,7 @@ function syncInventoryByAll()
 function OnApply_ButtonClick()
 {
 	SetINIInt(m_Windowname, "e", nCurrentHPPotionPercent, "WindowsInfo.ini");
-	if(getInstanceUIData().GetIsLiveServer())
-	{
-		AutoUseItemWnd(GetScript("AutoUseItemWnd")).requestAutoPlayForAutoPotion(nCurrentHPPotionPercent);
-	}
-	else
-	{
-		AutomaticPlay(GetScript("AutomaticPlay")).requestAutoPlayForAutoPotion(nCurrentHPPotionPercent);
-	}
+	AutoUseItemWnd(GetScript("AutoUseItemWnd")).requestAutoPlayForAutoPotion(nCurrentHPPotionPercent);
 	Me.HideWindow();
 	return;
 }
