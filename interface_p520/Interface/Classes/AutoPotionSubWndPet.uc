@@ -256,7 +256,7 @@ function OnApply_ButtonClick()
 {
 	Debug((("OnApply_ButtonClick" @ string(nCurrentHPPetPotionPercent)) @ m_Windowname));
 	SetINIInt("AutoPotionSubWnd", "l", nCurrentHPPetPotionPercent, "WindowsInfo.ini");
-	AutomaticPlay(GetScript("AutomaticPlay")).requestAutoPlayForAutoPotionPet(nCurrentHPPetPotionPercent);
+	AutoUseItemWnd(GetScript("AutoUseItemWnd")).requestAutoPlayForAutoPotionPet(nCurrentHPPetPotionPercent);
 	Me.HideWindow();
 	return;
 }
