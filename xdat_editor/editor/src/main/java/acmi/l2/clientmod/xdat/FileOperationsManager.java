@@ -40,6 +40,8 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.WildcardFileFilter;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.Collection;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
@@ -176,11 +178,40 @@ class FileOperationsManager {
                     throw new IOException(msg, e);
                 }
                 return null;
-            }, e -> Dialogs.showException(Alert.AlertType.ERROR, "Read error", "Try to choose another version", e));
+            }, e -> Dialogs.showException(Alert.AlertType.ERROR, "Read error", getReadErrorHelp(file), e));
         } catch (ReflectiveOperationException e) {
             String msg = "XDAT class should have empty public constructor";
             log.log(Level.WARNING, msg, e);
             Dialogs.showException(Alert.AlertType.ERROR, "ReflectiveOperationException", msg, e);
+        }
+    }
+
+    private String getReadErrorHelp(File file) {
+        if (looksLikeModernWolfXdat(file)) {
+            return "Modern XDAT detected (Varkas/Relic/AutomaticPlay markers). " +
+                    "This build currently ships schemas only through Salvation (etoa5), " +
+                    "while this file uses a later layout that is likely from the p502 family. " +
+                    "Do not save it using the Salvation schema. Add/select the matching modern schema first.";
+        }
+
+        return "Try to choose another version";
+    }
+
+    private boolean looksLikeModernWolfXdat(File file) {
+        try {
+            String raw = new String(Files.readAllBytes(file.toPath()), StandardCharsets.ISO_8859_1);
+
+            boolean hasRelic = raw.contains("RelicSummonWnd") || raw.contains("RelicCollection");
+            boolean hasVarkas = raw.contains("Varkas");
+            boolean hasAutoPlay = raw.contains("AutomaticPlay") || raw.contains("AutoHunt_All_Btn");
+            boolean hasModernSystems = raw.contains("CollectionSystem") ||
+                    raw.contains("AssassinOnly") ||
+                    raw.contains("Homunculus");
+
+            return (hasRelic && hasVarkas) || (hasAutoPlay && hasRelic && hasModernSystems);
+        } catch (IOException e) {
+            log.log(Level.FINE, "Couldn't inspect XDAT markers in " + file, e);
+            return false;
         }
     }
 
