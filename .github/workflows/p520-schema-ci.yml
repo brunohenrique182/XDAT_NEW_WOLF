@@ -1,0 +1,108 @@
+name: p520 Schema CI
+
+on:
+  push:
+    branches:
+      - feature/wolf-modern-xdat
+  pull_request:
+    paths:
+      - 'xdat_editor/schema/**'
+      - 'xdat_editor/editor/**'
+      - 'xdat_editor/build.xml'
+      - 'interface_p520/**'
+      - '.github/workflows/p520-schema-ci.yml'
+
+jobs:
+  audit-autohunt:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Audit Auto Hunt source references
+        shell: bash
+        run: |
+          echo "=== Informational Interface references ==="
+          grep -RInE 'AutomaticPlay|AutoHunt_All_Btn|AutoplaySettingHandler|requestAutoPlay|IsAutoMode|SetAutoMode|setPlayAutoTargetActiveAnim' interface_p520/Interface/Classes || true
+          echo
+          echo "=== Informational InterfaceClassic references ==="
+          grep -RInE 'AutomaticPlay|AutoHunt_All_Btn|AutoplaySettingHandler|requestAutoPlay|IsAutoMode|SetAutoMode|setPlayAutoTargetActiveAnim' interface_p520/InterfaceClassic/Classes || true
+          echo
+          echo "=== Forbidden active Classic hooks ==="
+          FORBIDDEN="$(grep -RInE 'AutoHunt_All_Btn|AutomaticPlay|YetiQuickSlotwndScript\.setPlayAutoTargetActiveAnim' interface_p520/InterfaceClassic/Classes || true)"
+          if [ -n "$FORBIDDEN" ]; then
+            echo "$FORBIDDEN"
+            echo "Active Auto Hunt hook remains in InterfaceClassic."
+            exit 1
+          fi
+          echo "No forbidden active Classic Auto Hunt hooks found."
+
+
+  build-interface-p520:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Compile p520 Interface.u
+        shell: cmd
+        run: call interface_p520\Build_Interface.bat
+
+      - name: Compile p520 InterfaceClassic.u
+        shell: cmd
+        run: call interface_p520\Build_InterfaceClassic.bat
+
+      - name: Upload rebuilt Interface packages
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p520-interface-packages
+          path: |
+            interface_p520/Build/Interface.u
+            interface_p520/Build/InterfaceClassic.u
+          retention-days: 7
+
+      - name: Upload UCC logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p520-interface-ucc-logs
+          path: interface_p520/Logs/*.log
+          if-no-files-found: ignore
+          retention-days: 7
+
+  build-p520-schema:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21 with JavaFX
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '21'
+          java-package: 'jdk+fx'
+
+      - name: Install Ant
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ant
+
+      - name: Compile XDAT Editor and p520 schema
+        run: ant -f xdat_editor/build.xml clean dist
+
+      - name: Package compiled editor
+        run: |
+          cd xdat_editor/dist
+          zip -r ../../p520-xdat-editor.zip .
+          cd ../..
+
+      - name: Upload compiled editor
+        uses: actions/upload-artifact@v4
+        with:
+          name: p520-xdat-editor
+          path: p520-xdat-editor.zip
+          retention-days: 7

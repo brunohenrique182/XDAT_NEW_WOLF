@@ -1,0 +1,2 @@
+class RelicWndExchange extends UICommonAPI;
+

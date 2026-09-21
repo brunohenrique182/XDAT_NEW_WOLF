@@ -21,9 +21,9 @@
  */
 package acmi.l2.clientmod.xdat.propertyeditor;
 
-import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.control.CheckBox;
 import org.controlsfx.control.PropertySheet;
@@ -31,6 +31,7 @@ import org.controlsfx.property.editor.AbstractPropertyEditor;
 
 public class BooleanPropertyEditor extends AbstractPropertyEditor<Boolean, CheckBox> {
     private ObjectProperty<Boolean> value;
+    private boolean updatingEditor;
 
     public BooleanPropertyEditor(PropertySheet.Item property) {
         super(property, createCheckBox());
@@ -46,19 +47,48 @@ public class BooleanPropertyEditor extends AbstractPropertyEditor<Boolean, Check
     protected ObservableValue<Boolean> getObservableValue() {
         if (value == null) {
             value = new SimpleObjectProperty<>();
-            value.bind(Bindings.createObjectBinding(() -> getEditor().isIndeterminate() ? null : getEditor().isSelected(),
-                    getEditor().indeterminateProperty(), getEditor().selectedProperty()));
+
+            ChangeListener<Boolean> editorListener = (observable, oldValue, newValue) -> updateValueFromEditor();
+            getEditor().indeterminateProperty().addListener(editorListener);
+            getEditor().selectedProperty().addListener(editorListener);
         }
+
         return value;
     }
 
+    private void updateValueFromEditor() {
+        if (updatingEditor)
+            return;
+
+        value.set(getEditor().isIndeterminate() ? null : getEditor().isSelected());
+    }
+
     @Override
-    public void setValue(Boolean value) {
-        if (value == null)
-            getEditor().setIndeterminate(true);
-        else {
-            getEditor().setIndeterminate(false);
-            getEditor().setSelected(value);
+    public void setValue(Boolean newValue) {
+        /*
+         * ControlsFX calls setValue while synchronizing the editor with the
+         * PropertySheet item. Changing selected/indeterminate fires two separate
+         * checkbox notifications; with a direct binding those transient states can
+         * be written back into the XDAT object (for example null/-1 -> true/1).
+         *
+         * Suppress checkbox-to-model propagation while applying the programmatic
+         * value, then publish the final tri-state value exactly once.
+         */
+        updatingEditor = true;
+        try {
+            if (newValue == null) {
+                getEditor().setSelected(false);
+                getEditor().setIndeterminate(true);
+            } else {
+                getEditor().setSelected(newValue);
+                getEditor().setIndeterminate(false);
+            }
+        } finally {
+            updatingEditor = false;
         }
+
+        if (value == null)
+            value = new SimpleObjectProperty<>();
+        value.set(newValue);
     }
 }

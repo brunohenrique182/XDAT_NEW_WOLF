@@ -1,0 +1,2 @@
+class ViewPortWndArena extends ViewPortWndBase;
+

@@ -1,0 +1,2 @@
+class GFxMovieView extends Interactions;
+

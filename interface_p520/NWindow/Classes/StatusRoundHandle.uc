@@ -1,0 +1,2 @@
+class StatusRoundHandle extends StatusBaseHandle;
+

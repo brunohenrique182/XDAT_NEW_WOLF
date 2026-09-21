@@ -299,7 +299,7 @@ public class Controller implements Initializable {
                     Class<? extends IOEntity> loaded = xdatClassCache.get(xdatClass);
                     if (loaded == null) {
                         loaded = Class.forName(xdatClass, true,
-                                new GroovyClassLoader(getClass().getClassLoader())).asSubclass(IOEntity.class);
+                                new GroovyClassLoader(editor.getSchemaClassLoader())).asSubclass(IOEntity.class);
                         xdatClassCache.put(xdatClass, loaded);
                     }
                     final Class<? extends IOEntity> clazz = loaded;

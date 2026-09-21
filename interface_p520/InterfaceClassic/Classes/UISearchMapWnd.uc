@@ -1,0 +1,2 @@
+class UISearchMapWnd extends UICommonAPI;
+
