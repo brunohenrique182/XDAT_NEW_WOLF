@@ -1221,3 +1221,109 @@ Se você está entrando neste projeto agora:
 - `AutomaticPlay`, `AutoHunt_All_Btn`, `YetiQuickSlotWnd`, `RelicSummonWnd` e `Varkas` foram confirmados;
 - commit final validado do round-trip: `ebb197c`;
 - a próxima tarefa não é mais corrigir parsing: é fazer uma **edição controlada do Auto Hunt e testar o arquivo editado no cliente Wolf**.
+
+
+---
+
+# 19. Primeiro teste real de XDAT editado — falha no loader nativo
+
+Data:
+
+```text
+2026-09-21
+```
+
+Cliente confirmado:
+
+```text
+Version: D10_Global,NL_s,V2110409,520
+BuildDate: Fri Aug 29 04:00:47 2025
+```
+
+Após o round-trip sem edição ter sido fechado como byte-idêntico, foi feito o primeiro teste com um XDAT realmente alterado.
+
+O cliente rejeitou o arquivo durante a inicialização, antes de entrar no mundo ou executar a lógica normal de `AutomaticPlay.uc`.
+
+Erro:
+
+```text
+Assertion failed: pUIData [File:..\XML\XMLDataManager.cpp] [Line: 1637]
+
+History:
+XMLDataManager::CreateUIData
+<- XMLWindowData::Serialize
+<- XMLDataManager::Serialize
+<- XMLDataManager::LoadXdat
+<- XMLUIManager::LoadXML
+<- NConsoleWnd::InitializeXMLUI
+<- NConsoleWnd::Initialize
+<- NConsoleWnd::Init
+<- UGameEngine::InitConsole
+<- UGameEngine::Init
+<- InitEngine
+```
+
+### Interpretação atual
+
+Isso desloca a fronteira do problema.
+
+Já está comprovado que:
+
+- o schema p520 lê os dois XDAT reais;
+- escreve os dois XDAT;
+- reabre os arquivos salvos;
+- sem alteração, o resultado é byte-idêntico ao original.
+
+Porém, um arquivo realmente modificado falha dentro de `XMLDataManager::LoadXdat`.
+
+As duas hipóteses principais a distinguir agora são:
+
+1. a edição pelo Property Sheet alterou mais bytes/campos do que o pretendido;
+2. a seção moderna final preservada como `modernTrailingData` contém índice, validação, checksum ou metadata dependente do conteúdo anterior e precisa ser reconstruída/recalculada após uma edição.
+
+Não assumir ainda qual hipótese é correta.
+
+### Ferramenta de diagnóstico adicionada
+
+Commit:
+
+```text
+6eb67a8
+tools: add p520 edited XDAT binary comparator
+```
+
+Arquivo:
+
+```text
+xdat_editor/tools/compare-xdat-edit.ps1
+```
+
+Uso:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\xdat_editor\tools\compare-xdat-edit.ps1 `
+  -Original "C:\caminho\Interface.original.xdat" `
+  -Edited   "C:\caminho\Interface.edited.xdat"
+```
+
+O script informa:
+
+- tamanho original e editado;
+- SHA-256;
+- quantidade de bytes modificados;
+- quantidade de faixas modificadas;
+- primeiro e último offset divergente;
+- hexdump de contexto das diferenças;
+- offsets dos marcadores principais do Auto Hunt.
+
+### Próximo passo obrigatório
+
+Antes de tentar remover `AutomaticPlay` ou objetos inteiros:
+
+1. comparar o original com o arquivo que causou o crash;
+2. confirmar se a alteração foi somente a região esperada;
+3. se forem apenas poucos bytes em tamanho fixo, investigar a trailing section moderna como possível metadata de validação/índice/checksum;
+4. se houver múltiplas regiões inesperadas, corrigir primeiro a edição/serialização do Property Sheet;
+5. se o tamanho do arquivo mudar em uma edição fixa, tratar como bug de serialização.
+
+Até esse diagnóstico ser fechado, não avançar para remoção estrutural do Auto Hunt.
