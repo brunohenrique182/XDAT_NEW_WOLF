@@ -39,6 +39,11 @@ class ListCtrl extends DefaultProperty {
     @Type(ListElement.class)
     List<ListElement> modernColumns = []
 
+    // p520 conditionally appends one fixed ListElement after modernColumns.
+    // Confirmed byte-for-byte on GMFindTreeWnd.ListFindWnd in both supplied
+    // Interface.xdat and InterfaceClassic.xdat when modernFlag04 != 0.
+    ListElement modernTrailingColumn = new ListElement()
+
     @Bindable
     @DefaultIO
     static class ListElement implements IOEntity {
@@ -75,6 +80,9 @@ class ListCtrl extends DefaultProperty {
 
         modernColumns = input.readList(ListElement)
 
+        if (modernFlag04 != 0)
+            modernTrailingColumn = new ListElement().read(input)
+
         this
     }
 
@@ -100,6 +108,9 @@ class ListCtrl extends DefaultProperty {
         output.writeInt(modernFlag04)
 
         output.writeList(modernColumns)
+
+        if (modernFlag04 != 0)
+            modernTrailingColumn.write(output)
 
         this
     }
