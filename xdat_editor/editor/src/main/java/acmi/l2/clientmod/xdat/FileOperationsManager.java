@@ -190,7 +190,7 @@ class FileOperationsManager {
         if (looksLikeModernWolfXdat(file)) {
             return "Modern XDAT detected (Varkas/Relic/AutomaticPlay markers). " +
                     "This build currently ships schemas only through Salvation (etoa5), " +
-                    "while this file uses a later layout that is likely from the p502 family. " +
+                    "while this file uses a later layout from the modern p502/p509 family. " +
                     "Do not save it using the Salvation schema. Add/select the matching modern schema first.";
         }
 
