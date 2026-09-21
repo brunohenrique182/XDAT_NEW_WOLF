@@ -7,7 +7,6 @@ var string m_Windowname;
 var ShortcutWnd ShortcutWndScript;
 var AutoPotionSubWnd AutoPotionSubWndScript;
 var YetiPCModeChangeWnd YetiPCModeChangeWndScript;
-var YetiQuickSlotWnd YetiQuickSlotwndScript;
 var ButtonHandle hSettingButton;
 var ButtonHandle vSettingButton;
 var int currentSlotClassID;
@@ -33,7 +32,6 @@ function OnLoad()
 	vSettingButton = GetButtonHandle("AutoPotionWnd.AutoPotionWnd_VerWnd.HP_PotionWnd_VerWnd.setting_Btn");
 	ShortcutWndScript = ShortcutWnd(GetScript("ShortcutWnd"));
 	AutoPotionSubWndScript = AutoPotionSubWnd(GetScript("AutoPotionSubWnd"));
-	YetiQuickSlotwndScript = YetiQuickSlotWnd(GetScript("YetiQuickSlotwnd"));
 	YetiPCModeChangeWndScript = YetiPCModeChangeWnd(GetScript("YetiPCModeChangeWnd"));
 	return;
 }
@@ -58,7 +56,6 @@ function HandleShortcutClear(string param)
 		currentSlotClassID = 0;
 		setPotionStateCustomTooltip();
 		bActiveAutoPotionSlot = false;
-		YetiQuickSlotwndScript.setPlayAutoTargetActiveAnim();
 	}
 	return;
 }
@@ -79,7 +76,6 @@ function HandleShortcutUpdate(string param)
 		{
 			bActiveAutoPotionSlot = false;
 		}
-		YetiQuickSlotwndScript.setPlayAutoTargetActiveAnim();
 		if((nClassID > 0))
 		{
 			AutoPotionSubWndScript.ExSetSelectPostion(nClassID);
@@ -140,7 +136,6 @@ function ShortcutAutomaticUseActivatedHandler(string param)
 		{
 			bActiveAutoPotionSlot = false;
 		}
-		YetiQuickSlotwndScript.setPlayAutoTargetActiveAnim();
 	}
 	return;
 }
