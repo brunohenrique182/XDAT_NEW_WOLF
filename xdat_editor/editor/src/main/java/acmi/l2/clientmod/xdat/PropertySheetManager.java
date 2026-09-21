@@ -41,8 +41,6 @@ import java.util.*;
 import java.util.function.Function;
 
 class PropertySheetManager {
-    private static Map<Class, List<PropertySheetItem>> propertyCache = new HashMap<>();
-
     private final XdatEditor editor;
 
     PropertySheetManager(XdatEditor editor) {
@@ -64,10 +62,22 @@ class PropertySheetManager {
             if (obj instanceof ListHolder)
                 return;
 
-            if (!propertyCache.containsKey(obj.getClass())) {
-                propertyCache.put(obj.getClass(), loadProperties(obj));
-            }
-            List<PropertySheetItem> props = propertyCache.get(obj.getClass());
+            /*
+             * PropertySheetItem / FieldProperty is stateful: it stores the current
+             * target object and listeners. Reusing one cached instance for every
+             * object of the same schema class allows an editor created for a prior
+             * Window/Button to push its old UI value into the newly selected object.
+             *
+             * This is especially destructive for XDAT tri-state booleans because the
+             * binary format uses -1/null in addition to 0/false and 1/true. A stale
+             * checkbox value can silently normalize -1 to 1 and change the file even
+             * when the user never touched that property.
+             *
+             * Build fresh property items per selected object. Reflection here is tiny
+             * compared with loading the XDAT and avoids cross-instance contamination.
+             */
+            List<PropertySheetItem> props = loadProperties(obj);
+
             props.forEach(property -> {
                 property.setObject(obj);
                 ChangeListener<Object> addToHistory = (observable1, oldValue1, newValue1) -> {
