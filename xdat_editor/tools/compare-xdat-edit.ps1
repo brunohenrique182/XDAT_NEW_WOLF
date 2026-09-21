@@ -161,14 +161,30 @@ $markers = @(
     "Varkas"
 )
 
-Write-Host "Marker first offsets in original:" -ForegroundColor Cyan
 $latin1 = [System.Text.Encoding]::GetEncoding(28591)
-$raw = $latin1.GetString($originalBytes)
-foreach ($marker in $markers) {
-    $idx = $raw.IndexOf($marker, [System.StringComparison]::Ordinal)
-    if ($idx -ge 0) {
-        Write-Host ("  {0,-20} 0x{1:X8} ({1})" -f $marker, $idx)
-    } else {
-        Write-Host ("  {0,-20} not found" -f $marker)
+
+function Show-MarkerOffsets([string]$Label, [byte[]]$Bytes) {
+    Write-Host $Label -ForegroundColor Cyan
+    $raw = $latin1.GetString($Bytes)
+
+    foreach ($marker in $markers) {
+        $idx = $raw.IndexOf($marker, [System.StringComparison]::Ordinal)
+        if ($idx -ge 0) {
+            Write-Host ("  {0,-20} 0x{1:X8} ({1})" -f $marker, $idx)
+        } else {
+            Write-Host ("  {0,-20} not found" -f $marker) -ForegroundColor Green
+        }
     }
+}
+
+Write-Host ""
+Show-MarkerOffsets "Marker first offsets in original:" $originalBytes
+Write-Host ""
+Show-MarkerOffsets "Marker first offsets in edited:" $editedBytes
+
+if ($originalBytes.Length -ne $editedBytes.Length) {
+    Write-Host ""
+    Write-Host ("Net size delta: {0:N0} bytes" -f ($editedBytes.Length - $originalBytes.Length)) -ForegroundColor Cyan
+    Write-Host "For structural deletions, a large naive byte-diff is expected because all later bytes shift." -ForegroundColor DarkYellow
+    Write-Host "Use the marker table above plus successful reopen/client load to validate removals." -ForegroundColor DarkYellow
 }
