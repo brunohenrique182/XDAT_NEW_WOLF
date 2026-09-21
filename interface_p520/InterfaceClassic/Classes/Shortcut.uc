@@ -198,7 +198,7 @@ function HandleShortcutKeyEventWindow(string wndname)
 			HandleShowMovieCaptureWnd();
 			break;
 		case "Replayrec":
-			DoAction(Class'Interface.UICommonAPI'.static.GetItemID(55));
+			DoAction(Class'InterfaceClassic.UICommonAPI'.static.GetItemID(55));
 			break;
 		case "Productinven":
 			HandleShowProductInventory();
@@ -210,7 +210,7 @@ function HandleShortcutKeyEventWindow(string wndname)
 			}
 			else
 			{
-				DoAction(Class'Interface.UICommonAPI'.static.GetItemID(10));
+				DoAction(Class'InterfaceClassic.UICommonAPI'.static.GetItemID(10));
 			}
 			break;
 		case "ShopBuy":
@@ -220,7 +220,7 @@ function HandleShortcutKeyEventWindow(string wndname)
 			}
 			else
 			{
-				DoAction(Class'Interface.UICommonAPI'.static.GetItemID(28));
+				DoAction(Class'InterfaceClassic.UICommonAPI'.static.GetItemID(28));
 			}
 			break;
 		case "ShopSellAll":
@@ -230,11 +230,11 @@ function HandleShortcutKeyEventWindow(string wndname)
 			}
 			else
 			{
-				DoAction(Class'Interface.UICommonAPI'.static.GetItemID(61));
+				DoAction(Class'InterfaceClassic.UICommonAPI'.static.GetItemID(61));
 			}
 			break;
 		case "ShopSearch":
-			DoAction(Class'Interface.UICommonAPI'.static.GetItemID(57));
+			DoAction(Class'InterfaceClassic.UICommonAPI'.static.GetItemID(57));
 			break;
 		case "Petition":
 			HandleShowPetitionBegin();
@@ -681,7 +681,7 @@ function HandleShowHelpHtmlWnd()
 {
 	local AgeWnd script1;
 
-	Class'Interface.HelpWnd'.static.ShowHelp();
+	Class'InterfaceClassic.HelpWnd'.static.ShowHelp();
 	script1 = AgeWnd(GetScript("AgeWnd"));
 	if((script1.bBlock == false))
 	{
