@@ -1779,3 +1779,57 @@ Interface
 ```
 
 O `InterfaceClassic` ainda mantém a implementação original de Auto Hunt e deve ser tratado somente depois que o pacote Live passar no cliente.
+
+
+### 22.7 Script automático para remover os nós do XDAT
+
+Foi adicionado:
+
+```text
+xdat_editor/tools/p520-remove-autohunt.groovy
+```
+
+Commit:
+
+```text
+3b9ceba
+tools: add p520 full Auto Hunt removal script
+```
+
+O script deve ser executado na aba `Script` do XDAT Editor depois de abrir o `Interface.xdat` original com o schema:
+
+```text
+Wolf Waker / p520 (experimental)
+```
+
+Ele faz preflight antes da primeira mutação e exige exatamente um objeto para cada alvo esperado.
+
+Remove automaticamente:
+
+```text
+AutomaticPlay                                   top-level Window
+YetiQuickSlotWnd.AutoHunt_All_Btn              Button
+YetiQuickSlotWnd.ToggleEffect_Anim              Auto Hunt animation
+YetiQuickSlotWnd.Check_AutoTargetIcon           Auto Target status icon
+AutoUseItemWnd.AutoTargetWnd                    complete subtree
+AutoUseItemWndMin.AutoTargetWndMin_window       complete subtree
+WndDefPos[AutomaticPlay]                        if present
+ShortcutItem.command == AutoPlay                all profiles
+ShortcutSpecialItem.command == AutoPlay         all profiles
+```
+
+Preserva Auto Potion e os slots de Auto Use Item.
+
+Depois da execução, o script valida as pós-condições e imprime:
+
+```text
+=== Post-check OK ===
+```
+
+O arquivo deve então ser salvo por `File -> Save As` como:
+
+```text
+Interface_NoAutoHunt_FULL.xdat
+```
+
+Esse XDAT deve ser usado junto com o `Interface.u` recompilado do mesmo head da branch.
