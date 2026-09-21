@@ -310,6 +310,12 @@ Options:
             </fileset>
         </copy>
 
+        <!-- Prepare external XDAT schema plugin support -->
+        <mkdir dir="${dist.dir}/schema-plugins"/>
+        <copy file="tools/install-modern-schema.ps1" todir="${dist.dir}"/>
+        <copy file="tools/install-modern-schema.bat" todir="${dist.dir}"/>
+        <copy file="tools/inspect-modern-xdat.ps1" todir="${dist.dir}/tools"/>
+
         <!-- Create launcher script for Linux -->
         <echo file="${dist.dir}/xdat-editor.sh"><![CDATA[#!/bin/bash
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
