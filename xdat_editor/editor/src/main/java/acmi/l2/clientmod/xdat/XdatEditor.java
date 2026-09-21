@@ -43,17 +43,29 @@ import org.apache.commons.csv.CSVRecord;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
+import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.prefs.Preferences;
@@ -71,6 +83,11 @@ public class XdatEditor extends Application {
     private final ObjectProperty<IOEntity> xdatObject = new SimpleObjectProperty<>();
 
     private String applicationVersion;
+
+    private volatile ClassLoader schemaClassLoader = getClass().getClassLoader();
+    private final Set<String> registeredSchemaClasses = new HashSet<>();
+    private static final Pattern EXTERNAL_XDAT_CLASS =
+            Pattern.compile("^((?:p\\d+)|(?:ct[^/]+)|(?:god[^/]+)|(?:etoa[^/]+))/XDAT\\.class$");
 
     private History history = new History();
     private UndoManager undoManager = new UndoManager();
@@ -121,6 +138,10 @@ public class XdatEditor extends Application {
 
     public String getApplicationVersion() {
         return applicationVersion;
+    }
+
+    public ClassLoader getSchemaClassLoader() {
+        return schemaClassLoader;
     }
 
     public ReadOnlyBooleanProperty workingProperty() {
@@ -213,17 +234,122 @@ public class XdatEditor extends Application {
     }
 
     private void loadSchema() {
+        loadBuiltInSchema();
+        loadExternalSchemas();
+    }
+
+    private void loadBuiltInSchema() {
         String versionsFilePath = "/versions.csv";
-        try (CSVParser parser = new CSVParser(new InputStreamReader(getClass().getResourceAsStream(versionsFilePath)), CSVFormat.DEFAULT)) {
-            for (CSVRecord record : parser.getRecords()) {
-                String name = record.get(0);
-                String className = record.get(1);
-                controller.registerVersion(name, className);
-            }
+        InputStream stream = getClass().getResourceAsStream(versionsFilePath);
+        if (stream == null) {
+            String msg = versionsFilePath + " not found";
+            log.warning(msg);
+            Dialogs.showException(Alert.AlertType.WARNING, msg, msg, null);
+            return;
+        }
+
+        try (InputStream input = stream) {
+            registerVersions(input, false, "built-in");
         } catch (Exception e) {
             String msg = versionsFilePath + " read error";
             log.log(Level.WARNING, msg, e);
             Dialogs.showException(Alert.AlertType.WARNING, msg, e.getMessage(), e);
+        }
+    }
+
+    private void loadExternalSchemas() {
+        Path pluginDir = Paths.get(System.getProperty("user.dir"), "schema-plugins");
+
+        try {
+            Files.createDirectories(pluginDir);
+
+            List<Path> jars = new ArrayList<>();
+            try (java.util.stream.Stream<Path> stream = Files.list(pluginDir)) {
+                stream.filter(path -> Files.isRegularFile(path))
+                        .filter(path -> path.getFileName().toString().toLowerCase(Locale.ROOT).endsWith(".jar"))
+                        .sorted()
+                        .forEach(jars::add);
+            }
+
+            if (jars.isEmpty()) {
+                log.info("No external schema plugins found in " + pluginDir.toAbsolutePath());
+                return;
+            }
+
+            URL[] urls = new URL[jars.size()];
+            for (int i = 0; i < jars.size(); i++) {
+                urls[i] = jars.get(i).toUri().toURL();
+            }
+
+            URLClassLoader externalLoader = new URLClassLoader(urls, getClass().getClassLoader());
+            schemaClassLoader = externalLoader;
+
+            for (Path jarPath : jars) {
+                loadExternalSchemaJar(jarPath);
+            }
+        } catch (Exception e) {
+            String msg = "External schema load error";
+            log.log(Level.WARNING, msg, e);
+            Dialogs.showException(Alert.AlertType.WARNING, msg, e.getMessage(), e);
+        }
+    }
+
+    private void loadExternalSchemaJar(Path jarPath) {
+        int before = registeredSchemaClasses.size();
+
+        try (JarFile jar = new JarFile(jarPath.toFile())) {
+            JarEntry versionsEntry = jar.getJarEntry("versions.csv");
+            if (versionsEntry != null) {
+                try (InputStream input = jar.getInputStream(versionsEntry)) {
+                    registerVersions(input, true, jarPath.getFileName().toString());
+                }
+            }
+
+            java.util.Enumeration<JarEntry> entries = jar.entries();
+            while (entries.hasMoreElements()) {
+                JarEntry entry = entries.nextElement();
+                Matcher matcher = EXTERNAL_XDAT_CLASS.matcher(entry.getName());
+                if (!matcher.matches()) {
+                    continue;
+                }
+
+                String protocolPackage = matcher.group(1);
+                String className = protocolPackage + ".XDAT";
+                if (registeredSchemaClasses.add(className)) {
+                    controller.registerVersion(
+                            "Protocol " + protocolPackage + " [external]",
+                            className);
+                }
+            }
+
+            int added = registeredSchemaClasses.size() - before;
+            log.info("External schema plugin " + jarPath.getFileName() + ": " + added + " version(s) registered");
+        } catch (Exception e) {
+            log.log(Level.WARNING, "Couldn't load external schema plugin " + jarPath, e);
+        }
+    }
+
+    private void registerVersions(InputStream input, boolean external, String source) throws IOException {
+        try (CSVParser parser = new CSVParser(
+                new InputStreamReader(input, java.nio.charset.StandardCharsets.UTF_8),
+                CSVFormat.DEFAULT)) {
+            for (CSVRecord record : parser.getRecords()) {
+                if (record.size() < 2) {
+                    continue;
+                }
+
+                String name = record.get(0).trim();
+                String className = record.get(1).trim();
+
+                if (!registeredSchemaClasses.add(className)) {
+                    continue;
+                }
+
+                controller.registerVersion(
+                        external ? name + " [external]" : name,
+                        className);
+                log.info("Registered XDAT schema " + className + " from " + source);
+            }
         }
     }
 
