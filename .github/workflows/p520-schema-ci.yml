@@ -28,6 +28,35 @@ jobs:
           echo "=== InterfaceClassic references ==="
           grep -RInE 'AutomaticPlay|AutoHunt_All_Btn|AutoplaySettingHandler|requestAutoPlay|IsAutoMode|SetAutoMode|setPlayAutoTargetActiveAnim' interface_p520/InterfaceClassic/Classes || true
 
+
+  build-interface-p520:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Compile p520 Interface.u
+        shell: cmd
+        run: call interface_p520\Build_Interface.bat
+
+      - name: Upload rebuilt Interface.u
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p520-interface-u
+          path: interface_p520/Build/Interface.u
+          retention-days: 7
+
+      - name: Upload UCC logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p520-interface-ucc-logs
+          path: interface_p520/Logs/*.log
+          if-no-files-found: ignore
+          retention-days: 7
+
   build-p520-schema:
     runs-on: ubuntu-latest
 
