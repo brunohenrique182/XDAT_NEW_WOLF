@@ -918,77 +918,106 @@ Não criar os outros às cegas sem ocorrência binária real.
 
 # 12. Progresso dos testes de runtime
 
-O schema já passou por uma grande sequência de top-level Windows, incluindo:
+## Validação real final do round-trip — 2026-09-21
 
-- Ability*
-- AbnormalStatusExtendWnd
-- ActionWnd
-- AgeWnd
-- AgitDeco*
-- Alchemy*
-- ArenaTutorialWnd
-- Artifact*
-- AssassinOnly
-- AttendCheck*
-- Attribute*
-- Auction*
-- AutomaticPlay
-- AutoPotion*
-- AutoShotItemWnd
-- AutoUseItem*
-- Balrog*
-- BenchMarkMenuWnd
-- BirthdayAlarm*
-- BlackCouponWnd
-- Block*
-- BoardWnd
-- BOTsystemWnd
-- BottomBar
-- BR_*
-- BuilderCmdWnd
-- CalculatorWnd
-- Campaign*
-- CardExchangeWnd
-- Character*
-- ChatWnd
-- Clan*
-- ClassChange*
-- Cleft*
-- CollectionSystem*
-- ColorNickName*
-- ConsoleWnd
-- CounterAttackWnd
-- CouponEventWnd
-- CrossEvent*
-- CrystallizationWnd
-- CursedWeaponMessage
-- Customizing*
-- DebugWnd
+O schema p520 atual foi validado diretamente contra os **dois XDAT originais fornecidos**, usando o artefato do GitHub Actions gerado pelo commit `ebb197c`.
 
-### Último teste de runtime antes deste documento
+### Interface.xdat
 
-Após o fix de RichListCtrl, o parser chegou a:
+Original:
 
 ```text
-DebugWnd[Window]
+Tamanho: 6,723,372 bytes
+SHA-256: cbee9c55b81428d4f57a09db5d6d612a761cdc02ffba25ceba26aa0d42234744
 ```
 
-e depois caiu em EOF no tamanho total do arquivo:
+Resultado do round-trip sem edição:
 
 ```text
-Read error before offset 0x66972c
-java.io.EOFException
-at IOUtil.readUIEntity
-at p520.Window.read(Window.groovy:227)
+READ_OK
+643 windows
+25 shortcuts
+
+WRITE_OK
+Tamanho salvo: 6,723,372 bytes
+SHA-256 salvo: cbee9c55b81428d4f57a09db5d6d612a761cdc02ffba25ceba26aa0d42234744
+
+FIRST_DIFF=NONE
+
+REOPEN_OK
+643 windows
+25 shortcuts
 ```
 
-Análise offline mostrou:
+### InterfaceClassic.xdat
 
-- `DebugWnd` está alinhado corretamente;
-- o próximo top-level é `DeliverWnd`;
-- o desalinhamento real era `InvenWeight`;
-- foi criado o fix `4057372`;
-- próximo teste deve confirmar avanço além de `DeliverWnd`.
+Original:
+
+```text
+Tamanho: 7,021,258 bytes
+SHA-256: de2f54db0a327614f0696118da4ae57a27accb1b72374d42f41336307fd9933f
+```
+
+Resultado do round-trip sem edição:
+
+```text
+READ_OK
+656 windows
+25 shortcuts
+
+WRITE_OK
+Tamanho salvo: 7,021,258 bytes
+SHA-256 salvo: de2f54db0a327614f0696118da4ae57a27accb1b72374d42f41336307fd9933f
+
+FIRST_DIFF=NONE
+
+REOPEN_OK
+656 windows
+25 shortcuts
+```
+
+### Marcadores-alvo confirmados
+
+Nos arquivos reais foram confirmados:
+
+- `AutomaticPlay` — 33 ocorrências;
+- `AutoHunt_All_Btn` — 5 ocorrências;
+- `YetiQuickSlotWnd` — 17 ocorrências;
+- `RelicSummonWnd` — 37 ocorrências no `Interface.xdat` e 38 no `InterfaceClassic.xdat`;
+- `Varkas` — presente.
+
+Como o resultado sem edição possui **mesmo tamanho, mesmo SHA-256 e nenhum primeiro byte divergente**, esses marcadores e seus dados binários ao redor sobreviveram ao ciclo:
+
+```text
+read -> write -> reopen
+```
+
+sem qualquer alteração.
+
+### Correções que fecharam o round-trip
+
+As últimas diferenças de serialização foram resolvidas por:
+
+```text
+f62d702  p520 ChatChannelDefinition: 30 canais + duas cores RGBA
+5cf56f5  preservar Window.exitbutton como inteiro cru
+741c059  preservar a seção moderna final do XDAT byte-for-byte
+ebb197c  preservar ListCtrl.ListElement.bNumber como inteiro cru
+```
+
+O CI do push final concluiu com sucesso.
+
+### Estado atual
+
+O suporte p520 já passou por:
+
+- leitura integral dos dois XDAT reais;
+- escrita integral;
+- reabertura do arquivo salvo;
+- round-trip **byte-idêntico** sem edição;
+- preservação dos alvos de Auto Hunt, Relic e Varkas.
+
+A fronteira que resta é diferente: precisamos fazer uma **edição controlada** no Auto Hunt, salvar e verificar se o cliente Wolf aceita o arquivo modificado.
 
 ---
 
@@ -1016,6 +1045,11 @@ afdc152  remove old drawer offsets from p520 Window
 5e70262  p520 StatusRound
 71aaa11  complete p520 RichListCtrl layout
 4057372  p520 InvenWeight tail
+c0c2ea1  p520 TextListBox tail
+f62d702  p520 ChatChannelDefinition moderno
+5cf56f5  preservar Window.exitbutton cru
+741c059  preservar trailing section moderna byte-for-byte
+ebb197c  preservar ListCtrl.ListElement.bNumber cru; fecha round-trip byte-idêntico
 ```
 
 O histórico completo da branch/PR deve ser consultado no GitHub para SHAs completos.
@@ -1119,37 +1153,57 @@ Sempre preferir validar uma hipótese em várias ocorrências reais antes de alt
 
 # 17. Próximos passos
 
-1. Fazer `git pull` contendo o commit `4057372`.
-2. Rebuildar `p520`.
-3. Abrir novamente o `Interface.xdat`.
-4. Confirmar que passa por `DebugWnd`, `DeliverWnd` e `SelectDeliverWnd`.
-5. Se houver nova falha, identificar o controle anterior ao offset e cruzar com `interface_p520`.
-6. Continuar até todos os 643 top-level Windows serem lidos.
-7. Fazer `Save As` sem edição.
-8. Reabrir o arquivo salvo.
-9. Comparar original vs salvo.
-10. Corrigir qualquer diferença de round-trip.
-11. Só depois editar/remover:
-    - `AutomaticPlay`
-    - `AutoHunt_All_Btn`
-    - elementos relacionados ao Auto Hunt.
-12. Testar no cliente real.
-13. Repetir o mesmo processo no `InterfaceClassic.xdat`.
+O parser/serializer base p520 está fechado para no-op round-trip. Não voltar a reconstruir subclasses sem uma nova evidência binária.
+
+Próxima etapa prática:
+
+1. Fazer uma cópia dos XDAT originais.
+2. Abrir com `Wolf Waker / p520 (experimental)`.
+3. Fazer uma alteração **mínima e reversível** ligada ao Auto Hunt.
+4. Priorizar primeiro esconder/desabilitar `AutoHunt_All_Btn` / controles de `YetiQuickSlotWnd`, sem remover estruturas inteiras.
+5. Salvar em um novo arquivo.
+6. Reabrir o arquivo modificado no XDAT Editor para confirmar consistência estrutural.
+7. Comparar original vs modificado e registrar exatamente quais bytes/objetos mudaram.
+8. Colocar o arquivo modificado no cliente Wolf.
+9. Iniciar o cliente e validar:
+   - login;
+   - entrada no mundo;
+   - UI principal;
+   - atalhos;
+   - `YetiQuickSlotWnd`;
+   - Auto Potion / Auto Use Item;
+   - ausência/desativação do Auto Hunt;
+   - ausência de crash/erro de interface.
+10. Depois de o teste controlado ser aceito, aplicar a remoção/desativação completa de:
+    - `AutomaticPlay`;
+    - `AutoHunt_All_Btn`;
+    - controles relacionados ao Auto Hunt.
+11. Repetir a edição no `InterfaceClassic.xdat`.
+12. Só então considerar o suporte p520 + remoção de Auto Hunt concluídos.
 
 ---
 
 # 18. Critério de conclusão do suporte p520
 
-O suporte só deve ser considerado concluído quando:
+### Já concluído
 
 - `Interface.xdat` abre 100%;
 - `InterfaceClassic.xdat` abre 100%;
 - `Save As` funciona;
 - arquivo salvo reabre;
-- no-edit round-trip não altera estrutura inesperadamente;
-- cliente aceita o arquivo salvo;
-- Auto Hunt pode ser removido/desabilitado sem quebrar UI;
-- offsets/layouts modernos deixam de depender de hacks manuais.
+- no-edit round-trip é **byte-idêntico** nos dois arquivos reais;
+- tamanhos e SHA-256 são preservados;
+- marcadores modernos de Auto Hunt, Relic e Varkas são preservados;
+- GitHub Actions do schema p520 está verde no commit final validado.
+
+### Ainda pendente
+
+- fazer uma alteração controlada real;
+- confirmar que o cliente Wolf aceita o XDAT **editado**;
+- remover/desabilitar Auto Hunt sem quebrar a UI;
+- validar a mesma mudança em `InterfaceClassic.xdat`.
+
+Portanto, o **schema p520 de leitura/escrita sem edição está validado**. O que falta agora é a validação funcional do arquivo modificado dentro do cliente.
 
 ---
 
@@ -1157,11 +1211,13 @@ O suporte só deve ser considerado concluído quando:
 
 Se você está entrando neste projeto agora:
 
-- o cliente alvo é tratado como **Wolf Waker / p520**;
+- o cliente alvo é **Wolf Waker / p520**;
 - a pasta `interface_p520` é a source de referência;
-- o XDAT moderno está sendo reconstruído sobre etoa5 com overrides;
-- muitos controles modernos já foram corrigidos;
-- o parser já chega até `DebugWnd`;
-- o último fix implementado foi **InvenWeight +3 ints**, commit `4057372`;
-- o próximo passo é testar esse commit e continuar a partir de `DeliverWnd`;
-- o objetivo final é remover `AutomaticPlay` / `AutoHunt_All_Btn` com round-trip seguro.
+- o schema p520 reconstruído já lê integralmente os dois XDAT reais;
+- `Interface.xdat`: 643 windows / 25 shortcuts;
+- `InterfaceClassic.xdat`: 656 windows / 25 shortcuts;
+- ambos passam `read -> write -> reopen`;
+- ambos geram saída **byte-idêntica ao original**, com SHA-256 idêntico;
+- `AutomaticPlay`, `AutoHunt_All_Btn`, `YetiQuickSlotWnd`, `RelicSummonWnd` e `Varkas` foram confirmados;
+- commit final validado do round-trip: `ebb197c`;
+- a próxima tarefa não é mais corrigir parsing: é fazer uma **edição controlada do Auto Hunt e testar o arquivo editado no cliente Wolf**.
