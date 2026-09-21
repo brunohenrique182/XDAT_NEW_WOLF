@@ -14,7 +14,7 @@ import groovy.transform.CompileDynamic
  * - etoa5 saveSize is absent;
  * - drawerDirection is followed by offset fields only when non-zero;
  * - ownerWindow follows drawerDirection/offsets;
- * - a fixed 81-byte modern block follows ownerWindow;
+ * - a structured modern block follows ownerWindow and contains a variable-length String;
  * - the tail below aligns exactly through the children count.
  *
  * Unknown data is preserved byte-for-byte for safe round-trip research.
@@ -47,7 +47,29 @@ class Window extends DefaultProperty implements Iterable<DefaultProperty> {
     Boolean directionFixed
     String ownerWindow
 
-    transient byte[] modernWindowBlock = new byte[81]
+    // Modern Window block reconstructed structurally. The internal String makes
+    // this block variable-length (81 bytes when empty, 93 for "AgitDecoWnd").
+    int modernBlock01
+    int modernBlock02
+    int modernBlock03
+    int modernBlock04
+    int modernBlock05
+    int modernBlock06
+    int modernBlock07
+    int modernBlock08
+    int modernBlock09
+    int modernBlock10
+    int modernBlock11
+    int modernBlock12
+    int modernBlock13
+    int modernBlock14
+    String modernBlockString = ''
+    int modernBlock15
+    int modernBlock16
+    int modernBlock17
+    int modernBlock18
+    int modernBlock19
+    int modernBlock20
 
     @Tex String iconName = 'undefined'
     int tooltipIdx = -9999
@@ -156,8 +178,27 @@ class Window extends DefaultProperty implements Iterable<DefaultProperty> {
 
         ownerWindow = input.readString()
 
-        modernWindowBlock = new byte[81]
-        new DataInputStream(input).readFully(modernWindowBlock)
+        modernBlock01 = input.readInt()
+        modernBlock02 = input.readInt()
+        modernBlock03 = input.readInt()
+        modernBlock04 = input.readInt()
+        modernBlock05 = input.readInt()
+        modernBlock06 = input.readInt()
+        modernBlock07 = input.readInt()
+        modernBlock08 = input.readInt()
+        modernBlock09 = input.readInt()
+        modernBlock10 = input.readInt()
+        modernBlock11 = input.readInt()
+        modernBlock12 = input.readInt()
+        modernBlock13 = input.readInt()
+        modernBlock14 = input.readInt()
+        modernBlockString = input.readString()
+        modernBlock15 = input.readInt()
+        modernBlock16 = input.readInt()
+        modernBlock17 = input.readInt()
+        modernBlock18 = input.readInt()
+        modernBlock19 = input.readInt()
+        modernBlock20 = input.readInt()
 
         iconName = input.readString()
         tooltipIdx = input.readInt()
@@ -223,9 +264,27 @@ class Window extends DefaultProperty implements Iterable<DefaultProperty> {
 
         output.writeString(ownerWindow)
 
-        if (modernWindowBlock == null || modernWindowBlock.length != 81)
-            throw new IOException("p509 Window modern block must contain exactly 81 bytes")
-        output.write(modernWindowBlock)
+        output.writeInt(modernBlock01)
+        output.writeInt(modernBlock02)
+        output.writeInt(modernBlock03)
+        output.writeInt(modernBlock04)
+        output.writeInt(modernBlock05)
+        output.writeInt(modernBlock06)
+        output.writeInt(modernBlock07)
+        output.writeInt(modernBlock08)
+        output.writeInt(modernBlock09)
+        output.writeInt(modernBlock10)
+        output.writeInt(modernBlock11)
+        output.writeInt(modernBlock12)
+        output.writeInt(modernBlock13)
+        output.writeInt(modernBlock14)
+        output.writeString(modernBlockString)
+        output.writeInt(modernBlock15)
+        output.writeInt(modernBlock16)
+        output.writeInt(modernBlock17)
+        output.writeInt(modernBlock18)
+        output.writeInt(modernBlock19)
+        output.writeInt(modernBlock20)
 
         output.writeString(iconName)
         output.writeInt(tooltipIdx)
