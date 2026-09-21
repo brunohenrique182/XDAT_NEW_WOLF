@@ -37,7 +37,7 @@ class Window extends DefaultProperty implements Iterable<DefaultProperty> {
     Boolean resizeFrame
     FrameSizeType frameSize = FrameSizeType.None
     FrameDirectionType frameDirection = FrameDirectionType.None
-    Boolean exitbutton
+    int exitbutton
     Boolean movable
     Boolean draggable
     FrameDirectionType resizeFrameDirection = FrameDirectionType.None
@@ -167,7 +167,7 @@ class Window extends DefaultProperty implements Iterable<DefaultProperty> {
         resizeFrame = input.readBoolean()
         frameSize = input.readEnum(FrameSizeType)
         frameDirection = input.readEnum(FrameDirectionType)
-        exitbutton = input.readBoolean()
+        exitbutton = input.readInt()
         movable = input.readBoolean()
         draggable = input.readBoolean()
         resizeFrameDirection = input.readEnum(FrameDirectionType)
@@ -275,7 +275,7 @@ class Window extends DefaultProperty implements Iterable<DefaultProperty> {
         output.writeBoolean(resizeFrame)
         output.writeEnum(frameSize)
         output.writeEnum(frameDirection)
-        output.writeBoolean(exitbutton)
+        output.writeInt(exitbutton)
         output.writeBoolean(movable)
         output.writeBoolean(draggable)
         output.writeEnum(resizeFrameDirection)
