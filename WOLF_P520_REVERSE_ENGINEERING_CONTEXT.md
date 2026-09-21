@@ -1440,3 +1440,117 @@ Depois de atualizar para `ed0448a`:
 9. somente então testar no cliente Wolf.
 
 Não investigar checksum/trailing data antes desse novo teste, porque a primeira edição estava comprovadamente corrompida pela Property Sheet.
+
+
+---
+
+# 21. GUI PropertySheet corrigida — edição controlada agora é mínima
+
+Após os commits:
+
+```text
+737ecd0  fix: prevent PropertySheet state leaking across XDAT objects
+ed0448a  fix: preserve tri-state booleans during PropertySheet sync
+```
+
+foram repetidos dois testes no `Interface.xdat` real.
+
+## 21.1 Save As pela GUI sem edição
+
+Arquivo:
+
+```text
+Interface_GUI_NOEDIT.xdat
+```
+
+Resultado:
+
+```text
+Original size : 6,723,372 bytes
+Edited size   : 6,723,372 bytes
+
+Original SHA-256:
+cbee9c55b81428d4f57a09db5d6d612a761cdc02ffba25ceba26aa0d42234744
+
+Edited SHA-256:
+cbee9c55b81428d4f57a09db5d6d612a761cdc02ffba25ceba26aa0d42234744
+
+IDENTICAL: no byte differences.
+```
+
+Isso confirma que navegar pela Property Sheet e salvar sem alteração não contamina mais o XDAT.
+
+## 21.2 Edição controlada de AutoHunt_All_Btn
+
+Foi alterado somente o valor de posição testado em:
+
+```text
+YetiQuickSlotWnd.AutoHunt_All_Btn
+```
+
+Arquivo:
+
+```text
+Interface_editado_v2.xdat
+```
+
+Resultado:
+
+```text
+Original size : 6,723,372 bytes
+Edited size   : 6,723,372 bytes
+
+Changed bytes  : 1
+Changed ranges : 1
+
+First diff : 0x005DFA89 (6158985)
+Last diff  : 0x005DFA89 (6158985)
+```
+
+Byte original:
+
+```text
+0x36
+```
+
+Byte editado:
+
+```text
+0x37
+```
+
+Classificação:
+
+```text
+minimal fixed-size edit
+```
+
+Os marcadores principais continuam nos mesmos offsets:
+
+```text
+AutomaticPlay      0x000294FC
+AutoHunt_All_Btn   0x005DFA0E
+YetiQuickSlotWnd   0x005DEC9A
+RelicSummonWnd     0x00610482
+Varkas             0x000E76B5
+```
+
+### Conclusão
+
+O problema anterior de arquivo editado estruturalmente corrompido foi resolvido.
+
+O editor agora demonstra:
+
+- no-op GUI Save As byte-idêntico;
+- edição real preservando o tamanho;
+- apenas o byte esperado é alterado;
+- nenhuma normalização massiva de outros objetos;
+- nenhum deslocamento estrutural posterior.
+
+### Próximo passo
+
+Testar `Interface_editado_v2.xdat` diretamente no cliente Wolf.
+
+Se o cliente aceitar esse arquivo, a etapa de edited-file acceptance do schema/editor está fechada e podemos avançar para esconder/desabilitar o Auto Hunt de forma controlada.
+
+Se o cliente rejeitar mesmo com apenas esse único byte alterado, então investigar metadata/validação/checksum do cliente passa a ser novamente relevante.
