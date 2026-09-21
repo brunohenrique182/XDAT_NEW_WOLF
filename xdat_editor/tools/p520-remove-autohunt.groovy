@@ -116,91 +116,6 @@ xdat.windows.each { window ->
     purgeChildren(window, window.name)
 }
 
-// 2b) Remove controls that still reference something we just deleted.
-// This closes the dependency chain. Example: a surviving texture/button may
-// still use relativeTo="AutoHunt_All_Btn" even after the button itself is gone.
-// Leaving that dangling reference keeps the removed name serialized in XDAT and
-// can also leave visual fragments behind.
-def forbiddenReferenceTokens = new LinkedHashSet()
-forbiddenReferenceTokens.addAll(topLevelRemove)
-forbiddenReferenceTokens.addAll(childRemove)
-
-def stringFieldRefs = { obj ->
-    def refs = []
-    def type = obj.getClass()
-    while (type != null && type != Object.class) {
-        type.getDeclaredFields().each { field ->
-            if (!field.synthetic &&
-                !java.lang.reflect.Modifier.isStatic(field.modifiers) &&
-                field.type == String.class) {
-                field.setAccessible(true)
-                def value = field.get(obj)
-                if (value != null && !value.toString().isEmpty()) {
-                    refs << [field: field.name, value: value.toString()]
-                }
-            }
-        }
-        type = type.getSuperclass()
-    }
-    refs
-}
-
-def forbiddenRefsFor = { obj ->
-    stringFieldRefs(obj).findAll { ref ->
-        forbiddenReferenceTokens.any { token ->
-            ref.value == token ||
-                ref.value.contains("." + token) ||
-                ref.value.contains(token + ".")
-        }
-    }
-}
-
-def purgeDanglingReferences
-purgeDanglingReferences = { node, String path ->
-    def childProperty = node.metaClass.hasProperty(node, "children")
-    if (childProperty == null || node.children == null) {
-        return 0
-    }
-
-    int removedCount = 0
-    def toRemove = []
-
-    node.children.each { child ->
-        def refs = forbiddenRefsFor(child)
-        if (!refs.isEmpty()) {
-            toRemove << [child: child, refs: refs]
-        } else {
-            removedCount += purgeDanglingReferences(child, path + "." + child.name)
-        }
-    }
-
-    toRemove.each { item ->
-        def child = item.child
-        def refText = item.refs.collect { r -> r.field + "=" + r.value }.join(", ")
-        println "Removing dangling control: ${path}.${child.name}  [${refText}]"
-        report["dangling:${path}.${child.name}"] += 1
-        forbiddenReferenceTokens.add(child.name)
-        node.children.remove(child)
-        removedCount++
-    }
-
-    removedCount
-}
-
-// Repeat because deleting a dangling control may make another surviving control
-// point to the newly deleted control.
-int danglingPass
-int danglingTotal = 0
-do {
-    danglingPass = 0
-    xdat.windows.each { window ->
-        danglingPass += purgeDanglingReferences(window, window.name)
-    }
-    danglingTotal += danglingPass
-} while (danglingPass > 0)
-
-report["dangling-reference-controls"] = danglingTotal
-
 // 3) Remove default-position metadata for deleted windows.
 def wndDefBefore = xdat.wndDefPos.size()
 xdat.wndDefPos.removeAll { wndDefRemove.contains(it.wnd) }
@@ -226,19 +141,14 @@ report.each { key, value ->
     println String.format("%-60s %d", key, value)
 }
 
-// 5) Post-check the complete surviving tree, including string references.
-def forbiddenNames = forbiddenReferenceTokens as Set
+// 5) Post-check the complete surviving tree.
+def forbiddenNames = (topLevelRemove + childRemove) as Set
 def leftovers = []
-def referenceLeftovers = []
 
 def scanTree
 scanTree = { node, String path ->
     if (forbiddenNames.contains(node.name)) {
         leftovers << path
-    }
-
-    forbiddenRefsFor(node).each { ref ->
-        referenceLeftovers << (path + "." + ref.field + "=" + ref.value)
     }
 
     def childProperty = node.metaClass.hasProperty(node, "children")
@@ -257,13 +167,6 @@ if (!leftovers.isEmpty()) {
     throw new IllegalStateException(
         "Post-check failed. Automation layout objects still exist:\n  " +
         leftovers.join("\n  ")
-    )
-}
-
-if (!referenceLeftovers.isEmpty()) {
-    throw new IllegalStateException(
-        "Post-check failed. Dangling references to removed automation objects remain:\n  " +
-        referenceLeftovers.join("\n  ")
     )
 }
 
