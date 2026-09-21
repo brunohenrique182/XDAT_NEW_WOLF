@@ -67,7 +67,7 @@ try {
                 Sort-Object -Unique
         )
 
-        $hasP509 = $entries -contains "p509/XDAT.class"
+        $hasP520 = $entries -contains "p520/XDAT.class"
         $hasP502 = $entries -contains "p502/XDAT.class"
 
         Write-Host ""
@@ -96,14 +96,14 @@ try {
 
         Write-Host ""
 
-        if ($hasP509) {
-            Write-Host "Candidate p509/XDAT.class is present." -ForegroundColor Green
+        if ($hasP520) {
+            Write-Host "Candidate p520/XDAT.class is present." -ForegroundColor Green
         }
         elseif ($hasP502) {
-            Write-Host "p502/XDAT.class is present, but p509 is absent." -ForegroundColor Yellow
+            Write-Host "p502/XDAT.class is present, but p520 is absent." -ForegroundColor Yellow
         }
         else {
-            Write-Host "Neither p509 nor p502 is present in this package." -ForegroundColor Yellow
+            Write-Host "Neither p520 nor p502 is present in this package." -ForegroundColor Yellow
             Write-Host "The package will still be installed for inspection, but do NOT use it to save the Wolf XDAT unless a matching schema is verified." -ForegroundColor Yellow
         }
     }
