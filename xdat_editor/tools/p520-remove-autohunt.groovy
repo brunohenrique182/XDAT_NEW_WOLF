@@ -1,8 +1,12 @@
 /*
- * Wolf Waker / p520 - remove Auto Hunt / Auto Target from Interface.xdat
+ * Wolf Waker / p520 - remove Auto Hunt / Auto Target from an Interface XDAT.
  *
- * Run from the XDAT Editor "Script" tab after opening the ORIGINAL Interface.xdat
- * with "Wolf Waker / p520 (experimental)" selected.
+ * Run this script TWICE:
+ *   1) on the ORIGINAL Interface.xdat
+ *   2) on the ORIGINAL InterfaceClassic.xdat
+ *
+ * Open each file in the XDAT Editor "Script" tab with
+ * "Wolf Waker / p520 (experimental)" selected.
  *
  * The script mutates only the in-memory XDAT. Use File -> Save As afterwards.
  * Never overwrite the original during validation.
@@ -137,4 +141,8 @@ println "Shortcut profiles after : ${xdat.shortcuts.size()}"
 println "WndDefPos after          : ${xdat.wndDefPos.size()}"
 println ""
 println "Auto Hunt / Auto Target layout objects are gone."
-println "Now use File -> Save As and save as Interface_NoAutoHunt_FULL.xdat."
+println "Use File -> Save As."
+println "Suggested names:"
+println "  Interface.xdat        -> Interface_NoAutoHunt_FULL.xdat"
+println "  InterfaceClassic.xdat -> InterfaceClassic_NoAutoHunt_FULL.xdat"
+println "Run this script on BOTH originals before installing the client patch."
