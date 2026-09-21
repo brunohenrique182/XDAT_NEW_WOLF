@@ -1554,3 +1554,65 @@ Testar `Interface_editado_v2.xdat` diretamente no cliente Wolf.
 Se o cliente aceitar esse arquivo, a etapa de edited-file acceptance do schema/editor está fechada e podemos avançar para esconder/desabilitar o Auto Hunt de forma controlada.
 
 Se o cliente rejeitar mesmo com apenas esse único byte alterado, então investigar metadata/validação/checksum do cliente passa a ser novamente relevante.
+
+
+---
+
+# 22. Cliente aceita estrutura editada, mas UI não inicializa (tela cinza)
+
+Teste executado com:
+
+```text
+Interface_editado_v2.xdat
+```
+
+Diferença comprovada contra o original:
+
+```text
+Changed bytes : 1
+Changed ranges: 1
+Offset        : 0x005DFA89
+0x36 -> 0x37
+```
+
+O cliente Wolf não apresentou mais:
+
+```text
+Assertion failed: pUIData
+XMLDataManager::LoadXdat
+```
+
+Porém, a janela do cliente abriu apenas com viewport/tela cinza e sem a interface de login.
+
+### Interpretação
+
+Isso é diferente do primeiro arquivo corrompido:
+
+- o parser/loader nativo não cai mais em assertion;
+- a estrutura serializada permanece estável;
+- a UI, porém, não chega ao estado funcional.
+
+Como a edição controlada muda apenas um byte de uma posição de `AutoHunt_All_Btn`, apagar toda a UI por causa de um deslocamento visual de 1 px seria inesperado.
+
+Portanto, agora é necessário distinguir:
+
+1. o cliente possui validação/integridade que invalida qualquer `Interface.xdat` cujo conteúdo difira do original; ou
+2. o campo que o editor apresenta como `anchor_x` nesse objeto possui alguma semântica/validação adicional no runtime p520.
+
+### Próximo teste A/B
+
+A. Colocar `Interface_GUI_NOEDIT.xdat` no cliente.
+   - Ele é byte-idêntico ao original.
+   - Deve abrir normalmente.
+   - Isso valida que o fluxo de substituição/nome do arquivo está correto.
+
+B. Criar uma segunda edição mínima de 1 byte em uma UI não relacionada ao Auto Hunt, preferencialmente uma janela opcional/tardia.
+   - manter tamanho idêntico;
+   - confirmar com `compare-xdat-edit.ps1`;
+   - testar no cliente.
+
+Resultados esperados:
+
+- se qualquer alteração de 1 byte produz tela cinza, investigar validação/integridade/hash externo ou interno;
+- se apenas a edição de `AutoHunt_All_Btn` produz tela cinza, investigar a semântica específica desse objeto/campo;
+- se outra edição mínima funciona, o editor/schema está confirmado para alterações e o problema fica localizado no alvo Auto Hunt.
