@@ -6,6 +6,7 @@ import acmi.l2.clientmod.util.*
 import acmi.l2.clientmod.util.defaultio.DefaultIO
 import groovy.beans.Bindable
 import groovy.transform.CompileDynamic
+import javafx.collections.FXCollections
 
 /**
  * Experimental Wolf-era Window layout reconstructed from the target Interface.xdat.
@@ -224,7 +225,35 @@ class Window extends DefaultProperty implements Iterable<DefaultProperty> {
         modernTailInt08 = input.readInt()
         modernTailBool02 = input.readBoolean()
 
-        children = input.readList(DefaultProperty)
+        // Read children explicitly so p520 reverse-engineering failures identify the
+        // owning window, failing child index and the last child that completed.
+        // Serialization is unchanged: child count is still a 32-bit int and every
+        // child is still a polymorphic DefaultProperty/UIEntity.
+        int childCount = input.readInt()
+        children = FXCollections.observableArrayList()
+        DefaultProperty previousChild = null
+
+        for (int childIndex = 0; childIndex < childCount; childIndex++) {
+            try {
+                DefaultProperty child = (DefaultProperty) IOUtil.readUIEntity(
+                        input,
+                        DefaultProperty.class.package.name,
+                        DefaultProperty.class.classLoader)
+                children.add(child)
+                previousChild = child
+            } catch (IOException e) {
+                String previousDescription = previousChild == null
+                        ? '<none>'
+                        : "${previousChild.name}[${previousChild.class.simpleName}]"
+
+                throw new IOException(
+                        "p520 Window '${name}': failed reading child " +
+                                "${childIndex + 1}/${childCount}; previous child=" +
+                                previousDescription,
+                        e)
+            }
+        }
+
         this
     }
 
