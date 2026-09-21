@@ -144,14 +144,6 @@ event OnShow()
 	ReturnScrollSubWnd.HideWindow();
 	syncInventory();
 	setItemButtonByIndex(CURRENTITEMINDEX);
-	if(getInstanceUIData().GetIsLiveServer())
-	{
-		GetTextureHandle("YetiQuickSlotWnd.Check_AutoUseItemIcon").ShowWindow();
-	}
-	else
-	{
-		GetTextureHandle("YetiQuickSlotWnd.Check_AutoUseItemIcon").HideWindow();
-	}
 	return;
 }
 
