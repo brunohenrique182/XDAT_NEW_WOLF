@@ -89,3 +89,30 @@ powershell -ExecutionPolicy Bypass -File .\xdat_editor\tools\inspect-aden-packag
 ```
 
 The script lists interesting entries and recursively inspects nested JAR/ZIP files for `*/XDAT.class` and `versions.csv`.
+
+
+## Experimental p509 reconstruction
+
+The branch now generates a `p509` schema automatically from `etoa5` during the Ant build and overlays only the confirmed Wolf-era differences.
+
+Confirmed from the supplied `Interface.xdat`:
+
+- shortcut block: 25 entries;
+- top-level window count: 643;
+- `DefaultProperty` contains one extra 32-bit field after `unk24` and before `tooltipType`;
+- `Window.saveSize` from etoa5 is absent in the observed Wolf layout;
+- after `resizeFrameDirection`, `drawerDirection` is read directly;
+- when `drawerDirection == None`, the old three etoa5 placeholder ints are absent;
+- `ownerWindow` follows;
+- an 81-byte modern Window block follows `ownerWindow`;
+- the reconstructed tail aligns exactly through the children count for both `AbilityCategory` and child `AbilitySlot11`.
+
+The unknown 81-byte block and unidentified modern tail fields are currently preserved losslessly for reverse-engineering and round-trip safety.
+
+The built-in Version menu now includes:
+
+```text
+Wolf / p509 (experimental)
+```
+
+The next validation step is to rebuild and open the supplied Wolf `Interface.xdat` with this schema. The first read failure offset will identify the next subclass/layout that differs from etoa5.
