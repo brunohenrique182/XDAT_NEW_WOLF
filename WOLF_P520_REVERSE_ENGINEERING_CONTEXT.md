@@ -1327,3 +1327,116 @@ Antes de tentar remover `AutomaticPlay` ou objetos inteiros:
 5. se o tamanho do arquivo mudar em uma edição fixa, tratar como bug de serialização.
 
 Até esse diagnóstico ser fechado, não avançar para remoção estrutural do Auto Hunt.
+
+
+---
+
+# 20. Diagnóstico do primeiro XDAT editado — corrupção pela Property Sheet
+
+O comparador binário foi executado contra:
+
+```text
+Original: Interface.xdat
+Edited:   Interface_editado.xdat
+```
+
+Resultado:
+
+```text
+Original size : 6,723,372 bytes
+Edited size   : 6,723,355 bytes
+Changed bytes : 475,918
+Changed ranges: 37,770
+First diff    : 0x00029515
+Last diff     : 0x0066972B
+```
+
+Isso descartou a hipótese de uma alteração mínima seguida apenas de rejeição por checksum/trailing metadata.
+
+### Evidência binária importante
+
+O primeiro desvio aparece dentro da região inicial de `AutomaticPlay`.
+
+Valores crus no original:
+
+```text
+FF FF FF FF
+```
+
+foram regravados no arquivo editado como:
+
+```text
+01 00 00 00
+```
+
+No framework do editor:
+
+```text
+-1 -> Boolean null
+ 0 -> false
+ 1 -> true
+```
+
+e:
+
+```text
+null -> -1
+false -> 0
+true -> 1
+```
+
+Portanto, o binário p520 suporta estado booleano tri-state e precisa preservar `-1/null` exatamente.
+
+### Root cause na UI
+
+`PropertySheetManager` mantinha um cache estático:
+
+```text
+Map<Class, List<PropertySheetItem>>
+```
+
+Os `FieldProperty` armazenados nesse cache são stateful:
+
+- guardam o objeto-alvo atual;
+- mantêm listeners;
+- são reutilizados entre todas as instâncias da mesma classe.
+
+Assim, ao selecionar uma nova `Window` ou `Button`, um editor criado para a instância anterior podia continuar com estado visual antigo e empurrar esse valor para a nova instância.
+
+Isso explica:
+
+- `AutomaticPlay` sofrer alterações sem ter sido o alvo desejado;
+- valores `-1/null` virarem `1/true`;
+- `AutoHunt_All_Btn` receber serialização incompatível com seu estado original;
+- o arquivo diminuir 17 bytes;
+- todo o conteúdo posterior ficar deslocado e produzir centenas de milhares de diferenças.
+
+### Correções
+
+```text
+737ecd0  fix: prevent PropertySheet state leaking across XDAT objects
+ed0448a  fix: preserve tri-state booleans during PropertySheet sync
+```
+
+Mudanças:
+
+1. `PropertySheetManager` não reutiliza mais `FieldProperty` entre objetos diferentes.
+2. Cada seleção recebe novos property items.
+3. `BooleanPropertyEditor` não propaga estados intermediários enquanto ControlsFX sincroniza checkbox tri-state.
+4. O valor final `null / false / true` é publicado somente após a sincronização visual terminar.
+
+### Próximo teste
+
+Depois de atualizar para `ed0448a`:
+
+1. rebuildar o editor p520;
+2. abrir o `Interface.xdat` original;
+3. navegar/selecionar vários Windows e Buttons;
+4. fazer `Save As` sem alteração;
+5. comparar original vs salvo — precisa continuar byte-idêntico;
+6. repetir a alteração controlada de `AutoHunt_All_Btn.anchor_x`;
+7. comparar novamente;
+8. a edição deve produzir apenas a diferença correspondente ao campo alterado, sem mudança de tamanho;
+9. somente então testar no cliente Wolf.
+
+Não investigar checksum/trailing data antes desse novo teste, porque a primeira edição estava comprovadamente corrompida pela Property Sheet.
