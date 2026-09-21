@@ -156,6 +156,11 @@ if ($ranges.Count -gt $shown) {
 $markers = @(
     "AutomaticPlay",
     "AutoHunt_All_Btn",
+    "AutoTargetWnd",
+    "AutoTargetWndMin_window",
+    "ToggleEffect_Anim",
+    "Check_AutoTargetIcon",
+    "AutoPlay",
     "YetiQuickSlotWnd",
     "RelicSummonWnd",
     "Varkas"
