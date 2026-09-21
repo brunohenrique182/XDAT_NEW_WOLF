@@ -198,7 +198,7 @@ function HandleShortcutKeyEventWindow(string wndname)
 			HandleShowMovieCaptureWnd();
 			break;
 		case "Replayrec":
-			DoAction(Class'InterfaceClassic.UICommonAPI'.static.GetItemID(55));
+			DoAction(Class'Interface.UICommonAPI'.static.GetItemID(55));
 			break;
 		case "Productinven":
 			HandleShowProductInventory();
@@ -210,7 +210,7 @@ function HandleShortcutKeyEventWindow(string wndname)
 			}
 			else
 			{
-				DoAction(Class'InterfaceClassic.UICommonAPI'.static.GetItemID(10));
+				DoAction(Class'Interface.UICommonAPI'.static.GetItemID(10));
 			}
 			break;
 		case "ShopBuy":
@@ -220,7 +220,7 @@ function HandleShortcutKeyEventWindow(string wndname)
 			}
 			else
 			{
-				DoAction(Class'InterfaceClassic.UICommonAPI'.static.GetItemID(28));
+				DoAction(Class'Interface.UICommonAPI'.static.GetItemID(28));
 			}
 			break;
 		case "ShopSellAll":
@@ -230,11 +230,11 @@ function HandleShortcutKeyEventWindow(string wndname)
 			}
 			else
 			{
-				DoAction(Class'InterfaceClassic.UICommonAPI'.static.GetItemID(61));
+				DoAction(Class'Interface.UICommonAPI'.static.GetItemID(61));
 			}
 			break;
 		case "ShopSearch":
-			DoAction(Class'InterfaceClassic.UICommonAPI'.static.GetItemID(57));
+			DoAction(Class'Interface.UICommonAPI'.static.GetItemID(57));
 			break;
 		case "Petition":
 			HandleShowPetitionBegin();
@@ -681,7 +681,7 @@ function HandleShowHelpHtmlWnd()
 {
 	local AgeWnd script1;
 
-	Class'InterfaceClassic.HelpWnd'.static.ShowHelp();
+	Class'Interface.HelpWnd'.static.ShowHelp();
 	script1 = AgeWnd(GetScript("AgeWnd"));
 	if((script1.bBlock == false))
 	{
@@ -791,14 +791,7 @@ function HandleShortcutCommand(string a_Param)
 				}
 				break;
 			case "AutoPlay":
-				if(getInstanceUIData().GetIsLiveServer())
-				{
-					AutoUseItemWnd(GetScript("AutoUseItemWnd")).OnClickButton("AutoTargetAll_BTN");
-				}
-				else
-				{
-					YetiQuickSlotWnd(GetScript("YetiQuickSlotWnd")).OnAutoHunt_All_BtnClick();
-				}
+				// Auto Hunt removed.
 				break;
 			case "HideAllWindow":
 				HandleHideAllWindow();
