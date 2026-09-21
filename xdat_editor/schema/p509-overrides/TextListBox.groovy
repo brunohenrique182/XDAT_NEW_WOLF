@@ -6,9 +6,11 @@ import groovy.transform.CompileDynamic
 /**
  * Wolf Waker / p520 TextListBox.
  *
- * Validated against all 6 serialized TextListBox controls in the supplied
- * Interface.xdat. p520 keeps the four legacy 32-bit fields and appends three
- * raw bytes. All observed values are 00 00 00.
+ * Binary-validated against every serialized TextListBox in both supplied p520
+ * XDAT files. p520 keeps the four legacy fields and appends three strings used
+ * by the vertical scrollbar. Most controls serialize them as three empty
+ * strings (00 00 00), while QuestDialogWnd stores the three
+ * ScrollAreaVSliderBar texture names.
  */
 @Bindable
 @CompileDynamic
@@ -18,9 +20,9 @@ class TextListBox extends DefaultProperty {
     int lineGap
     Boolean isShowScroll
 
-    int modernByte01
-    int modernByte02
-    int modernByte03
+    String sliderBarTopTexture = ''
+    String sliderBarCenterTexture = ''
+    String sliderBarBottomTexture = ''
 
     @Override
     TextListBox read(InputStream input) {
@@ -31,12 +33,9 @@ class TextListBox extends DefaultProperty {
         lineGap = input.readInt()
         isShowScroll = input.readBoolean()
 
-        modernByte01 = input.read()
-        modernByte02 = input.read()
-        modernByte03 = input.read()
-        if (modernByte01 < 0 || modernByte02 < 0 || modernByte03 < 0) {
-            throw new EOFException("Unexpected EOF inside p520 TextListBox byte fields")
-        }
+        sliderBarTopTexture = input.readString()
+        sliderBarCenterTexture = input.readString()
+        sliderBarBottomTexture = input.readString()
 
         this
     }
@@ -50,9 +49,9 @@ class TextListBox extends DefaultProperty {
         output.writeInt(lineGap)
         output.writeBoolean(isShowScroll)
 
-        output.write(modernByte01 & 0xff)
-        output.write(modernByte02 & 0xff)
-        output.write(modernByte03 & 0xff)
+        output.writeString(sliderBarTopTexture)
+        output.writeString(sliderBarCenterTexture)
+        output.writeString(sliderBarBottomTexture)
 
         this
     }
