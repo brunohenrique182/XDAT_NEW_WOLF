@@ -35,11 +35,11 @@ class Window extends DefaultProperty implements Iterable<DefaultProperty> {
     @Sysstr int title = -9999
     Boolean resizeFrame
     FrameSizeType frameSize = FrameSizeType.None
-    DirectionType frameDirection = DirectionType.None
+    FrameDirectionType frameDirection = FrameDirectionType.None
     Boolean exitbutton
     Boolean movable
     Boolean draggable
-    DirectionType resizeFrameDirection = DirectionType.None
+    FrameDirectionType resizeFrameDirection = FrameDirectionType.None
 
     DirectionType drawerDirection = DirectionType.None
     int offsetX
@@ -102,6 +102,24 @@ class Window extends DefaultProperty implements Iterable<DefaultProperty> {
         @Override int intValue() { value }
     }
 
+    /**
+     * Modern frame-direction fields use -1 as None.
+     * This is distinct from drawerDirection, which still uses the legacy
+     * ordinal enum where 0 means None.
+     */
+    enum FrameDirectionType implements IntValue {
+        None(-1),
+        Left(0),
+        Right(1),
+        Top(2),
+        Bottom(3),
+        Free(4)
+
+        final int value
+        FrameDirectionType(int value) { this.value = value }
+        @Override int intValue() { value }
+    }
+
     enum DirectionType {
         None, Left, Right, Top, Bottom, Free
     }
@@ -123,11 +141,11 @@ class Window extends DefaultProperty implements Iterable<DefaultProperty> {
         title = input.readInt()
         resizeFrame = input.readBoolean()
         frameSize = input.readEnum(FrameSizeType)
-        frameDirection = input.readEnum(DirectionType)
+        frameDirection = input.readEnum(FrameDirectionType)
         exitbutton = input.readBoolean()
         movable = input.readBoolean()
         draggable = input.readBoolean()
-        resizeFrameDirection = input.readEnum(DirectionType)
+        resizeFrameDirection = input.readEnum(FrameDirectionType)
 
         drawerDirection = input.readEnum(DirectionType)
         if (drawerDirection.ordinal() > 0) {
