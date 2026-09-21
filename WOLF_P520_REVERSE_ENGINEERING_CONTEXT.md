@@ -1929,3 +1929,19 @@ Isso evita repetir o estado em que Interface normal estava limpo, mas InterfaceC
 5. abrir o cliente;
 6. confirmar que **Auto-hunting** desapareceu;
 7. confirmar que **Auto-use supplies / Auto Potion / Auto Use Item** continuam funcionais.
+
+
+### Validação de build após remoção Classic
+
+GitHub Actions run #107 concluiu com sucesso após a remoção completa de `InterfaceClassic/Classes/AutomaticPlay.uc`.
+
+Passaram:
+
+```text
+audit-autohunt          SUCCESS
+build-p520-schema       SUCCESS
+Compile Interface.u     SUCCESS
+Compile InterfaceClassic.u SUCCESS
+```
+
+O artifact `p520-interface-packages` contém os dois pacotes rebuildados.
