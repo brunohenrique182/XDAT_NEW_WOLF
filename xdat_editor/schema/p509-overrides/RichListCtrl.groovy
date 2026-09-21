@@ -6,11 +6,21 @@ import acmi.l2.clientmod.util.defaultio.DefaultIO
 import groovy.beans.Bindable
 
 /**
- * Modern RichListCtrl, present in post-Death-Knight XDAT layouts.
+ * Wolf Waker / p520 RichListCtrl.
  *
- * Reconstructed from hundreds of occurrences in the supplied Wolf Interface.xdat.
- * The semantic names are intentionally left unknown; the binary structure is
- * preserved for safe reading/writing while reverse engineering continues.
+ * Reconstructed from 225 real RichListCtrl instances in the supplied
+ * Interface.xdat and cross-checked with interface_p520 RichListCtrlHandle.
+ *
+ * Binary layout after DefaultProperty:
+ *   11 x int
+ *   3 x String
+ *   3 x raw byte
+ *   3 x String
+ *   int columnCount
+ *   columnCount x RichListColumn (10 x int)
+ *
+ * The three raw bytes are normally 0/0/0. Quest-style lists use 16/16/15.
+ * Keeping unknown fields raw preserves exact round-trip behavior.
  */
 @Bindable
 class RichListCtrl extends DefaultProperty {
@@ -25,17 +35,25 @@ class RichListCtrl extends DefaultProperty {
     int modern09
     int modern10
     int modern11
-    int modern12
-    int modern13
 
-    String modernString = ''
+    String modernString01 = ''
+    String modernString02 = ''
+    String modernString03 = ''
 
-    @Type(RichListElement.class)
-    List<RichListElement> values = []
+    int modernByte01
+    int modernByte02
+    int modernByte03
+
+    String modernString04 = ''
+    String modernString05 = ''
+    String modernString06 = ''
+
+    @Type(RichListColumn.class)
+    List<RichListColumn> columns = []
 
     @Bindable
     @DefaultIO
-    static class RichListElement implements IOEntity {
+    static class RichListColumn implements IOEntity {
         int value01
         int value02
         int value03
@@ -66,11 +84,34 @@ class RichListCtrl extends DefaultProperty {
         modern09 = input.readInt()
         modern10 = input.readInt()
         modern11 = input.readInt()
-        modern12 = input.readInt()
-        modern13 = input.readInt()
 
-        modernString = input.readString()
-        values = input.readList(RichListElement)
+        modernString01 = input.readString()
+        modernString02 = input.readString()
+        modernString03 = input.readString()
+
+        modernByte01 = input.read()
+        modernByte02 = input.read()
+        modernByte03 = input.read()
+        if (modernByte01 < 0 || modernByte02 < 0 || modernByte03 < 0) {
+            throw new EOFException("Unexpected EOF inside p520 RichListCtrl byte fields")
+        }
+
+        modernString04 = input.readString()
+        modernString05 = input.readString()
+        modernString06 = input.readString()
+
+        int columnCount = input.readInt()
+        if (columnCount < 0 || columnCount > 256) {
+            throw new IOException("p520 RichListCtrl invalid column count: " + columnCount)
+        }
+
+        columns = []
+        for (int i = 0; i < columnCount; i++) {
+            RichListColumn column = new RichListColumn()
+            column.read(input)
+            columns.add(column)
+        }
+
         this
     }
 
@@ -89,11 +130,26 @@ class RichListCtrl extends DefaultProperty {
         output.writeInt(modern09)
         output.writeInt(modern10)
         output.writeInt(modern11)
-        output.writeInt(modern12)
-        output.writeInt(modern13)
 
-        output.writeString(modernString)
-        output.writeList(values)
+        output.writeString(modernString01)
+        output.writeString(modernString02)
+        output.writeString(modernString03)
+
+        output.write(modernByte01 & 0xff)
+        output.write(modernByte02 & 0xff)
+        output.write(modernByte03 & 0xff)
+
+        output.writeString(modernString04)
+        output.writeString(modernString05)
+        output.writeString(modernString06)
+
+        output.writeInt(columns == null ? 0 : columns.size())
+        if (columns != null) {
+            columns.each { RichListColumn column ->
+                column.write(output)
+            }
+        }
+
         this
     }
 }
