@@ -791,14 +791,7 @@ function HandleShortcutCommand(string a_Param)
 				}
 				break;
 			case "AutoPlay":
-				if(getInstanceUIData().GetIsLiveServer())
-				{
-					AutoUseItemWnd(GetScript("AutoUseItemWnd")).OnClickButton("AutoTargetAll_BTN");
-				}
-				else
-				{
-					YetiQuickSlotWnd(GetScript("YetiQuickSlotWnd")).OnAutoHunt_All_BtnClick();
-				}
+				// Auto Hunt removed.
 				break;
 			case "HideAllWindow":
 				HandleHideAllWindow();
