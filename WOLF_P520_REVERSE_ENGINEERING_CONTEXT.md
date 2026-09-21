@@ -1995,3 +1995,37 @@ Commits principais:
 4bf5ee9  fix(p520): remove complete Auto Use and Auto Hunt panel
 a172d65  tools(p520): verify complete automation panel removal
 ```
+
+
+---
+
+# 24. Validação real no cliente — painel de automação removido
+
+Validação visual real em Wolf Waker p520 confirmou que a versão do script correspondente ao commit `4bf5ee9` remove corretamente o painel inteiro de automação.
+
+Resultado observado no cliente:
+
+```text
+Auto-use supplies   -> ausente
+Auto-hunting        -> ausente
+AutomaticPlay UI    -> ausente
+HUD principal       -> carregou normalmente
+```
+
+A remoção funcionou mesmo com o comparador ainda encontrando uma string `AutoHunt_All_Btn` residual no XDAT editado. Esse marcador residual não representa um controle visual ativo e não justifica uma remoção em cascata de controles dependentes.
+
+A tentativa posterior de purgar referências órfãs em cascata foi revertida para evitar remoções desnecessárias de outros controles.
+
+Estado canônico do script:
+
+```text
+xdat_editor/tools/p520-remove-autohunt.groovy
+```
+
+Commit de restauração da versão validada:
+
+```text
+f0e4690  fix(p520): keep client-validated automation removal script
+```
+
+Conclusão: para o objetivo atual, considerar a remoção do Auto Hunt / Auto-use panel concluída e validada no cliente.
