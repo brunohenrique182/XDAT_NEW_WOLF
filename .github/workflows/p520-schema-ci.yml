@@ -13,9 +13,8 @@ on:
       - '.github/workflows/p520-schema-ci.yml'
 
 jobs:
-  build-p520-schema:
+  audit-autohunt:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -28,6 +27,13 @@ jobs:
           echo
           echo "=== InterfaceClassic references ==="
           grep -RInE 'AutomaticPlay|AutoHunt_All_Btn|AutoplaySettingHandler|requestAutoPlay|IsAutoMode|SetAutoMode|setPlayAutoTargetActiveAnim' interface_p520/InterfaceClassic/Classes || true
+
+  build-p520-schema:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Set up JDK 21 with JavaFX
         uses: actions/setup-java@v4
