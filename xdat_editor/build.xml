@@ -223,7 +223,7 @@ Options:
                 <include name="*.groovy"/>
             </fileset>
             <filterchain>
-                <replacestring from="package etoa5" to="package p509"/>
+                <replacestring from="package etoa5" to="package p520"/>
             </filterchain>
         </copy>
 
