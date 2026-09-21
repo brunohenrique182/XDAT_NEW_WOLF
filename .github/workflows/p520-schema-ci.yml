@@ -32,3 +32,16 @@ jobs:
 
       - name: Compile XDAT Editor and p520 schema
         run: ant -f xdat_editor/build.xml clean dist
+
+      - name: Package compiled editor
+        run: |
+          cd xdat_editor/dist
+          zip -r ../../p520-xdat-editor.zip .
+          cd ../..
+
+      - name: Upload compiled editor
+        uses: actions/upload-artifact@v4
+        with:
+          name: p520-xdat-editor
+          path: p520-xdat-editor.zip
+          retention-days: 7
