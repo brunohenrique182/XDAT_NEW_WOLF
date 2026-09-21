@@ -52,8 +52,8 @@ function Initialize()
 	ToggleEffect_Anim = GetAnimTextureHandle("AutoUseItemWnd.AutoAllON_Win.ToggleEffect_Anim");
 	AutoUseItemInventoryScript = AutoUseItemInventory(GetScript("AutoUseItemInventory"));
 	AutoUseItemWndMinScript = AutoUseItemWndMin(GetScript("AutoUseItemWndMin"));
-	ActiveSlotArrayMap = new Class'Interface.UIMapInt64Object';
-	ItemInfoSlotArrayMap = new Class'Interface.UIMapInt64Object';
+	ActiveSlotArrayMap = new Class'InterfaceClassic.UIMapInt64Object';
+	ItemInfoSlotArrayMap = new Class'InterfaceClassic.UIMapInt64Object';
 	return;
 }
 
