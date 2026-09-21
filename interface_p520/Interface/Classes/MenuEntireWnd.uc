@@ -1942,15 +1942,6 @@ function refreshMenu()
 		i++;
 	}
 	resizeMenuWnd();
-	if(getInstanceUIData().GetIsLiveServer())
-	{
-		AutoUseItemWnd(GetScript("AutoUseItemWnd")).setShortcutTooltip(getTooltipShortcutAutoPlay());
-		AutoUseItemWndMin(GetScript("AutoUseItemWndMin")).setShortcutTooltip(getTooltipShortcutAutoPlay());
-	}
-	else
-	{
-		AutomaticPlay(GetScript("AutomaticPlay")).setShortcutTooltip(getTooltipShortcutAutoPlay());
-	}
 	Menu(GetScript("Menu")).setBTN();
 	return;
 }
