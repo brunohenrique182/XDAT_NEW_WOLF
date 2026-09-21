@@ -1877,7 +1877,7 @@ Isso remove os hooks ativos que ainda:
 - encaminhavam Auto Potion pelo `AutomaticPlay`;
 - configuravam tooltip do AutoPlay pela `MenuEntireWnd`.
 
-`InterfaceClassic/Classes/AutomaticPlay.uc` foi reduzido a um stub inerte de compatibilidade. Ele não registra eventos, não abre UI e não liga Auto Hunt/Auto Target. Mantê-lo como shell evita quebrar referências indiretas antigas durante a transição.
+`InterfaceClassic/Classes/AutomaticPlay.uc` foi removido completamente depois que o audit confirmou que nenhum outro script Classic ainda referenciava essa classe. O CI agora falha se `AutomaticPlay`, `AutoHunt_All_Btn` ou o hook Yeti de Auto Target reaparecerem em `InterfaceClassic/Classes`.
 
 ## XDATs que precisam ser limpos
 
