@@ -22,11 +22,20 @@ jobs:
       - name: Audit Auto Hunt source references
         shell: bash
         run: |
-          echo "=== Interface references ==="
+          echo "=== Informational Interface references ==="
           grep -RInE 'AutomaticPlay|AutoHunt_All_Btn|AutoplaySettingHandler|requestAutoPlay|IsAutoMode|SetAutoMode|setPlayAutoTargetActiveAnim' interface_p520/Interface/Classes || true
           echo
-          echo "=== InterfaceClassic references ==="
+          echo "=== Informational InterfaceClassic references ==="
           grep -RInE 'AutomaticPlay|AutoHunt_All_Btn|AutoplaySettingHandler|requestAutoPlay|IsAutoMode|SetAutoMode|setPlayAutoTargetActiveAnim' interface_p520/InterfaceClassic/Classes || true
+          echo
+          echo "=== Forbidden active Classic hooks ==="
+          FORBIDDEN="$(grep -RInE --exclude=AutomaticPlay.uc 'AutoHunt_All_Btn|AutomaticPlay\(GetScript\("AutomaticPlay"\)\)|YetiQuickSlotwndScript\.setPlayAutoTargetActiveAnim' interface_p520/InterfaceClassic/Classes || true)"
+          if [ -n "$FORBIDDEN" ]; then
+            echo "$FORBIDDEN"
+            echo "Active Auto Hunt hook remains in InterfaceClassic."
+            exit 1
+          fi
+          echo "No forbidden active Classic Auto Hunt hooks found."
 
 
   build-interface-p520:
