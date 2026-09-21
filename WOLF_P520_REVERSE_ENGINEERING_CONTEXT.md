@@ -1616,3 +1616,166 @@ Resultados esperados:
 - se qualquer alteração de 1 byte produz tela cinza, investigar validação/integridade/hash externo ou interno;
 - se apenas a edição de `AutoHunt_All_Btn` produz tela cinza, investigar a semântica específica desse objeto/campo;
 - se outra edição mínima funciona, o editor/schema está confirmado para alterações e o problema fica localizado no alvo Auto Hunt.
+
+
+---
+
+# 22. Remoção integral do Auto Hunt — pacote Interface
+
+Após a validação de edição real do XDAT, foi iniciada a remoção estrutural do Auto Hunt no pacote `Interface` (Live).
+
+Objetivo desta fase:
+
+- remover `AutomaticPlay` como classe de Interface;
+- remover o botão mestre `YetiQuickSlotWnd.AutoHunt_All_Btn`;
+- remover o bloco `AutoTargetWnd` do `AutoUseItemWnd`;
+- remover o bloco minimizado `AutoTargetWndMin_window`;
+- desabilitar o comando/atalho `AutoPlay`;
+- preservar Auto Potion;
+- preservar Auto Use Item;
+- impedir qualquer caminho restante de reativar Auto Target/Auto Hunt.
+
+## 22.1 Source p520 alterada
+
+Commits principais:
+
+```text
+f909e5e  remove Interface Yeti Auto Hunt controls
+3101913  remove Interface Auto Target execution from AutoUseItem
+18ebb03  remove Interface minimized Auto Target behavior
+09b168a  disable Interface AutoPlay shortcut
+e77f377  remove Interface Yeti AutomaticPlay dependency
+d7ac3a6  remove Interface AutoPlay menu wiring
+20eb210  decouple Interface Auto Potion from Auto Hunt
+27f9fde  replace AutomaticPlay implementation with compatibility stub
+96e9ff5  preserve potion settings with Auto Hunt forced off
+9ba9af9  route Interface potion settings without AutomaticPlay
+87183a1  route Interface pet potion settings without AutomaticPlay
+b1dfd82  remove remaining Interface Auto Target entry points
+334d894  remove Interface AutomaticPlay class
+```
+
+### AutomaticPlay.uc
+
+Depois de remover todas as dependências externas do pacote `Interface`, o arquivo:
+
+```text
+interface_p520/Interface/Classes/AutomaticPlay.uc
+```
+
+foi deletado por completo.
+
+A auditoria final não encontrou mais `AutoHunt_All_Btn` nem dependências externas de `AutomaticPlay` no pacote `Interface`.
+
+## 22.2 AutoUseItemWnd
+
+O `AutoUseItemWnd` continua existindo porque contém funcionalidade separada de uso automático de itens.
+
+O bloco de Auto Target deixou de ser inicializado/executado:
+
+- eventos de Auto Play / next target removidos;
+- handlers de `AutoTargetAll_BTN` removidos;
+- macro target 276/279 removida do caminho de atualização;
+- pickup/manner/next target removidos do caminho de clique;
+- clique direito de Auto Target removido;
+- `getUseAutoTarget()` retorna false;
+- qualquer chamada de compatibilidade a `requestAutoPlay` força:
+  - `IsAutoPlayOn = false`;
+  - `IsPickupOn = false`;
+  - `IsNearTargetMode = false`;
+  - `IsMannerModeOn = false`;
+  - macro index = 0.
+
+Os helpers mantidos para Auto Potion usam a mesma estrutura de dados/protocolo apenas para atualizar percentuais de HP/pet, sempre com Auto Hunt desligado.
+
+## 22.3 Auto Potion preservado
+
+`AutoPotionWnd`, `AutoPotionSubWnd` e `AutoPotionSubWndPet` foram desacoplados do Yeti/AutomaticPlay.
+
+A configuração de poção agora passa por `AutoUseItemWnd`, que envia os dados com Auto Hunt explicitamente desligado.
+
+## 22.4 Build real do Interface.u
+
+Foi adicionado ao CI um job Windows que executa:
+
+```text
+interface_p520\Build_Interface.bat
+```
+
+usando o UCC real contido no kit p520.
+
+No commit:
+
+```text
+334d894
+```
+
+o job:
+
+```text
+build-interface-p520
+```
+
+concluiu com:
+
+```text
+success
+```
+
+O artifact `p520-interface-u` foi gerado com o `Interface.u` recompilado.
+
+Isso comprova que a source p520 continua compilável mesmo após a remoção literal de `AutomaticPlay.uc`.
+
+## 22.5 Remoção estrutural pendente no XDAT
+
+Para concluir a fase Live, o `Interface.xdat` original deve ser aberto no editor p520 e os objetos reais abaixo devem ser deletados da árvore, não apenas ocultados:
+
+```text
+AutomaticPlay                         [Window, top-level]
+
+YetiQuickSlotWnd
+├── AutoHunt_All_Btn                  [Button]
+├── ToggleEffect_Anim                 [Auto Hunt master animation]
+└── Check_AutoTargetIcon              [Auto Target status icon]
+
+AutoUseItemWnd
+└── AutoTargetWnd                     [Window, entire subtree]
+
+AutoUseItemWndMin
+└── AutoTargetWndMin_window           [Window, entire subtree]
+```
+
+Preservar:
+
+```text
+AutoPotionWnd
+AutoPotionSubWnd
+AutoPotionSubWndPet
+AutoUseItemWnd
+AutoUseItemWnd.ItemGroup_Wnd
+AutoUseItemWndMin
+Check_AutopotionIcon
+Check_AutoUseItemIcon
+```
+
+Também procurar por uma possível entrada `AutomaticPlay` em `WndDefPos` e removê-la se existir.
+
+Depois:
+
+1. salvar como `Interface_NoAutoHunt_FULL.xdat`;
+2. reabrir o arquivo no editor p520;
+3. confirmar que os nós removidos continuam ausentes;
+4. instalar junto com o `Interface.u` compilado a partir da mesma branch;
+5. testar login, mundo, atalhos, Auto Potion e Auto Use Item.
+
+A mudança estrutural do XDAT reduz o tamanho do arquivo por definição, portanto o comparador binário não deve mais exigir tamanho idêntico nesta etapa.
+
+## 22.6 InterfaceClassic
+
+A remoção acima está aplicada primeiro ao pacote:
+
+```text
+Interface
+```
+
+O `InterfaceClassic` ainda mantém a implementação original de Auto Hunt e deve ser tratado somente depois que o pacote Live passar no cliente.
