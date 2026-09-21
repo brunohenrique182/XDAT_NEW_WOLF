@@ -12,7 +12,7 @@ import groovy.transform.CompileDynamic
  *
  * Confirmed on AbilityCategory and AbilitySlot11:
  * - etoa5 saveSize is absent;
- * - drawerDirection is followed by offset fields only when non-zero;
+ * - legacy drawer offsetX/offsetY/directionFixed fields are absent in p520;
  * - ownerWindow follows drawerDirection/offsets;
  * - a structured modern block follows ownerWindow and contains a variable-length String;
  * - the tail below aligns exactly through the children count.
@@ -42,9 +42,11 @@ class Window extends DefaultProperty implements Iterable<DefaultProperty> {
     FrameDirectionType resizeFrameDirection = FrameDirectionType.None
 
     DirectionType drawerDirection = DirectionType.None
-    int offsetX
-    int offsetY
-    Boolean directionFixed
+
+    // p520 no longer serializes the legacy drawer offsetX/offsetY/directionFixed
+    // triplet here. The String immediately follows drawerDirection even when
+    // drawerDirection is non-zero (verified on ChatWnd, PartyWnd, StatusWnd,
+    // TargetStatusWnd, OlympiadPlayer* and other target windows).
     String ownerWindow
 
     // Modern Window block reconstructed structurally. The internal String makes
@@ -170,12 +172,6 @@ class Window extends DefaultProperty implements Iterable<DefaultProperty> {
         resizeFrameDirection = input.readEnum(FrameDirectionType)
 
         drawerDirection = input.readEnum(DirectionType)
-        if (drawerDirection.ordinal() > 0) {
-            offsetX = input.readInt()
-            offsetY = input.readInt()
-            directionFixed = input.readBoolean()
-        }
-
         ownerWindow = input.readString()
 
         modernBlock01 = input.readInt()
@@ -256,12 +252,6 @@ class Window extends DefaultProperty implements Iterable<DefaultProperty> {
         output.writeEnum(resizeFrameDirection)
 
         output.writeEnum(drawerDirection)
-        if (drawerDirection.ordinal() > 0) {
-            output.writeInt(offsetX)
-            output.writeInt(offsetY)
-            output.writeBoolean(directionFixed)
-        }
-
         output.writeString(ownerWindow)
 
         output.writeInt(modernBlock01)
