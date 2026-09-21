@@ -44,7 +44,7 @@
         <mkdir dir="${build.dir}/classes/commons-io"/>
         <mkdir dir="${build.dir}/classes/commons-l2resources"/>
         <mkdir dir="${build.dir}/classes/schema"/>
-        <mkdir dir="${build.dir}/generated-schema/p509"/>
+        <mkdir dir="${build.dir}/generated-schema/p520"/>
         <mkdir dir="${build.dir}/classes/editor"/>
         <mkdir dir="${dist.dir}"/>
         <mkdir dir="${lib.dir}"/>
@@ -213,12 +213,12 @@ Options:
         <pathelement location="${lib.dir}/asm-tree-${asm.version}.jar"/>
     </path>
 
-    <!-- Generate experimental Wolf p509 schema from etoa5 and overlay confirmed differences. -->
-    <target name="prepare-p509-schema" depends="init">
-        <delete dir="${build.dir}/generated-schema/p509"/>
-        <mkdir dir="${build.dir}/generated-schema/p509"/>
+    <!-- Generate experimental Wolf p520 schema from etoa5 and overlay confirmed differences. -->
+    <target name="prepare-p520-schema" depends="init">
+        <delete dir="${build.dir}/generated-schema/p520"/>
+        <mkdir dir="${build.dir}/generated-schema/p520"/>
 
-        <copy todir="${build.dir}/generated-schema/p509">
+        <copy todir="${build.dir}/generated-schema/p520">
             <fileset dir="schema/src/main/groovy/etoa5">
                 <include name="*.groovy"/>
             </fileset>
@@ -227,15 +227,18 @@ Options:
             </filterchain>
         </copy>
 
-        <copy todir="${build.dir}/generated-schema/p509" overwrite="true">
+        <copy todir="${build.dir}/generated-schema/p520" overwrite="true">
             <fileset dir="schema/p509-overrides">
                 <include name="*.groovy"/>
             </fileset>
+            <filterchain>
+                <replacestring from="package p509" to="package p520"/>
+            </filterchain>
         </copy>
     </target>
 
     <!-- Compile schema (Groovy) -->
-    <target name="compile-schema" depends="compile-commons-l2resources,prepare-p509-schema" description="Compile schema module">
+    <target name="compile-schema" depends="compile-commons-l2resources,prepare-p520-schema" description="Compile schema module">
         <taskdef name="groovyc" classname="org.codehaus.groovy.ant.Groovyc">
             <classpath refid="groovy.classpath"/>
         </taskdef>
@@ -253,7 +256,7 @@ Options:
             </classpath>
         </groovyc>
 
-        <!-- Compile generated p509 package after the regular schemas. -->
+        <!-- Compile generated p520 package after the regular schemas. -->
         <groovyc srcdir="${build.dir}/generated-schema"
                  destdir="${build.dir}/classes/schema"
                  encoding="UTF-8">
