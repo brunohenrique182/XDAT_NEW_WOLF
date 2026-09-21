@@ -68,7 +68,7 @@ class ListCtrl extends DefaultProperty {
         int width
         boolean bAscend
         boolean bClickEnable
-        boolean bNumber
+        int bNumber
 
         @Override
         String toString() { getClass().simpleName }
