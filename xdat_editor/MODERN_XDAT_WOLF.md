@@ -9,7 +9,7 @@ Modern interface files with Varkas, Relic and Automatic Play systems are newer a
 
 The editor now supports **external schema plugins** from `schema-plugins/*.jar`. It reads a plugin's `versions.csv` when present and also discovers protocol classes such as `p502/XDAT.class` automatically.
 
-For the Wolf/Varkas sample, current evidence points to the **509 client/protocol line**, with some interface work still referring to a **502 XDAT** base during the 502→509 transition. Therefore the exact XDAT schema must be verified empirically rather than hard-coded as p502. The repository does not redistribute third-party schema binaries; the installer downloads a public external schema directly on the user's machine and reports every numbered `p###/XDAT.class` it actually contains.
+For the Wolf Waker sample, current evidence points to the **509 client/protocol line**, with some interface work still referring to a **502 XDAT** base during the 502→509 transition. Therefore the exact XDAT schema must be verified empirically rather than hard-coded as p502. The repository does not redistribute third-party schema binaries; the installer downloads a public external schema directly on the user's machine and reports every numbered `p###/XDAT.class` it actually contains.
 
 ## Observations from the current samples
 
@@ -51,7 +51,7 @@ From a built `dist` folder, double-click:
 install-modern-schema.bat
 ```
 
-The installer downloads the public schema JAR into `schema-plugins\aln-modern-schema.jar`, enumerates every numbered `p###/XDAT.class` it contains, highlights p509/p502 when present, and leaves the built-in Salvation and older schemas untouched.
+The installer downloads the public schema JAR into `schema-plugins\aln-modern-schema.jar`, enumerates every numbered `p###/XDAT.class` it contains, highlights p520/p502 when present, and leaves the built-in Salvation and older schemas untouched.
 
 Restart the editor after installation. The modern protocols are then added to the **Version** menu with an `[external]` suffix.
 
@@ -70,7 +70,7 @@ The inspector is read-only and reports file size, SHA-256, modern feature marker
 The plugin loader and installer are implemented, but the target Wolf `Interface.xdat` still needs a real round-trip test with the installed p502 schema:
 
 1. install the modern schema;
-2. select the best matching external protocol, prioritizing p509 for Wolf/Varkas when available and testing p502 only when justified by the schema package;
+2. select the best matching external protocol, prioritizing p520 for Wolf/Varkas when available and testing p502 only when justified by the schema package;
 3. open the target `Interface.xdat`;
 4. confirm `AutomaticPlay`, `AutoHunt_All_Btn`, `YetiQuickSlotWnd`, `RelicSummonWnd` and Varkas-related windows;
 5. save to a new file;
@@ -91,9 +91,9 @@ powershell -ExecutionPolicy Bypass -File .\xdat_editor\tools\inspect-aden-packag
 The script lists interesting entries and recursively inspects nested JAR/ZIP files for `*/XDAT.class` and `versions.csv`.
 
 
-## Experimental p509 reconstruction
+## Experimental p520 reconstruction
 
-The branch now generates a `p509` schema automatically from `etoa5` during the Ant build and overlays only the confirmed Wolf-era differences.
+The branch now generates a `p520` schema automatically from `etoa5` during the Ant build and overlays only the confirmed Wolf-era differences.
 
 Confirmed from the supplied `Interface.xdat`:
 
@@ -104,15 +104,15 @@ Confirmed from the supplied `Interface.xdat`:
 - after `resizeFrameDirection`, `drawerDirection` is read directly;
 - when `drawerDirection == None`, the old three etoa5 placeholder ints are absent;
 - `ownerWindow` follows;
-- an 81-byte modern Window block follows `ownerWindow`;
+- a structured variable-length modern Window block follows `ownerWindow`;
 - the reconstructed tail aligns exactly through the children count for both `AbilityCategory` and child `AbilitySlot11`.
 
-The unknown 81-byte block and unidentified modern tail fields are currently preserved losslessly for reverse-engineering and round-trip safety.
+The modern Window block is variable-length because it contains an internal String. Unknown fields are preserved losslessly for reverse-engineering and round-trip safety.
 
 The built-in Version menu now includes:
 
 ```text
-Wolf / p509 (experimental)
+Wolf / p520 (experimental)
 ```
 
 The next validation step is to rebuild and open the supplied Wolf `Interface.xdat` with this schema. The first read failure offset will identify the next subclass/layout that differs from etoa5.
