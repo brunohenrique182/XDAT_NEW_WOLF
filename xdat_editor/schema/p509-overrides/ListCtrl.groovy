@@ -6,6 +6,16 @@ import acmi.l2.clientmod.util.Type
 import acmi.l2.clientmod.util.defaultio.DefaultIO
 import groovy.beans.Bindable
 
+/**
+ * Wolf Waker / p520 ListCtrl.
+ *
+ * Binary-validated against 126 ListCtrl instances in the supplied Interface.xdat.
+ * After the legacy ListElement list, p520 adds:
+ *   String + 4 ints + a second variable-length ListElement list.
+ *
+ * The second list is important: controls such as TeamRedList/TeamBlueList carry
+ * two columns, while other ListCtrls carry one, three, four, etc.
+ */
 @Bindable
 class ListCtrl extends DefaultProperty {
     int maxRow
@@ -21,16 +31,13 @@ class ListCtrl extends DefaultProperty {
     List<ListElement> values = []
 
     String modernString = ''
-    int modernTail01
-    int modernTail02
-    int modernTail03
-    int modernTail04
-    int modernTail05
-    int modernTail06
-    int modernTail07
-    int modernTail08
-    int modernTail09
-    int modernTail10
+    int modernFlag01
+    int modernFlag02
+    int modernFlag03
+    int modernFlag04
+
+    @Type(ListElement.class)
+    List<ListElement> modernColumns = []
 
     @Bindable
     @DefaultIO
@@ -48,6 +55,7 @@ class ListCtrl extends DefaultProperty {
     @Override
     ListCtrl read(InputStream input) {
         super.read(input)
+
         maxRow = input.readInt()
         showRow = input.readInt()
         useVScroll = input.readBoolean()
@@ -56,25 +64,24 @@ class ListCtrl extends DefaultProperty {
         usePageBrowser = input.readBoolean()
         useWheelForScroll = input.readBoolean()
         compareTooltip = input.readBoolean()
+
         values = input.readList(ListElement)
 
         modernString = input.readString()
-        modernTail01 = input.readInt()
-        modernTail02 = input.readInt()
-        modernTail03 = input.readInt()
-        modernTail04 = input.readInt()
-        modernTail05 = input.readInt()
-        modernTail06 = input.readInt()
-        modernTail07 = input.readInt()
-        modernTail08 = input.readInt()
-        modernTail09 = input.readInt()
-        modernTail10 = input.readInt()
+        modernFlag01 = input.readInt()
+        modernFlag02 = input.readInt()
+        modernFlag03 = input.readInt()
+        modernFlag04 = input.readInt()
+
+        modernColumns = input.readList(ListElement)
+
         this
     }
 
     @Override
     ListCtrl write(OutputStream output) {
         super.write(output)
+
         output.writeInt(maxRow)
         output.writeInt(showRow)
         output.writeBoolean(useVScroll)
@@ -83,19 +90,17 @@ class ListCtrl extends DefaultProperty {
         output.writeBoolean(usePageBrowser)
         output.writeBoolean(useWheelForScroll)
         output.writeBoolean(compareTooltip)
+
         output.writeList(values)
 
         output.writeString(modernString)
-        output.writeInt(modernTail01)
-        output.writeInt(modernTail02)
-        output.writeInt(modernTail03)
-        output.writeInt(modernTail04)
-        output.writeInt(modernTail05)
-        output.writeInt(modernTail06)
-        output.writeInt(modernTail07)
-        output.writeInt(modernTail08)
-        output.writeInt(modernTail09)
-        output.writeInt(modernTail10)
+        output.writeInt(modernFlag01)
+        output.writeInt(modernFlag02)
+        output.writeInt(modernFlag03)
+        output.writeInt(modernFlag04)
+
+        output.writeList(modernColumns)
+
         this
     }
 }
