@@ -1945,3 +1945,53 @@ Compile InterfaceClassic.u SUCCESS
 ```
 
 O artifact `p520-interface-packages` contém os dois pacotes rebuildados.
+
+
+---
+
+# 23. Script radical: remover também Auto-use supplies
+
+A validação visual mostrou que, mesmo após remover `AutomaticPlay` e os subtrees clássicos de Auto Target, o cliente ainda desenhava o bloco **Auto-hunting** dentro do painel **Auto-use supplies**.
+
+Causa prática: no p520 esse bloco visual continua acoplado ao top-level `AutoUseItemWnd`.
+
+O script:
+
+```text
+xdat_editor/tools/p520-remove-autohunt.groovy
+```
+
+foi alterado para remover estruturalmente também:
+
+```text
+AutoUseItemWnd
+AutoUseItemWndMin
+AutoUseItemInventory
+Check_AutoUseItemIcon
+```
+
+além de:
+
+```text
+AutomaticPlay
+AutoHunt_All_Btn
+ToggleEffect_Anim
+Check_AutoTargetIcon
+AutoTargetWnd
+AutoTargetWndMin_window
+atalhos AutoPlay / AutoHunt / AutoUseItem
+WndDefPos dos top-level removidos
+```
+
+O script agora é idempotente: pode rodar em um XDAT parcialmente limpo sem exigir que todos os objetos ainda existam.
+
+`AutoPotionWnd` e as janelas AutoPotion são preservadas intencionalmente nesta etapa.
+
+O comparador `compare-xdat-edit.ps1` também foi atualizado para mostrar os marcadores AutoUseItem no original/editado.
+
+Commits principais:
+
+```text
+4bf5ee9  fix(p520): remove complete Auto Use and Auto Hunt panel
+a172d65  tools(p520): verify complete automation panel removal
+```
