@@ -6,7 +6,6 @@ var Shortcut ShortcutScript;
 var ShortcutWnd ShortcutWndScript;
 var AutoPotionWnd AutoPotionWndScript;
 var AutoUseItemWnd AutoUseItemWndScript;
-var AutomaticPlay AutomaticPlayScript;
 var bool bActiveYetiMode;
 
 function OnRegisterEvent()
@@ -29,7 +28,6 @@ function Initialize()
 	ShortcutWndScript = ShortcutWnd(GetScript("ShortcutWnd"));
 	AutoPotionWndScript = AutoPotionWnd(GetScript("AutoPotionWnd"));
 	AutoUseItemWndScript = AutoUseItemWnd(GetScript("AutoUseItemWnd"));
-	AutomaticPlayScript = AutomaticPlay(GetScript("AutomaticPlay"));
 	bActiveYetiMode = false;
 	return;
 }
@@ -84,10 +82,6 @@ function setYetiMode(bool bUseYetiMode)
 		{
 			AutoUseItemWndScript.showHideForYeti(false);
 		}
-		else
-		{
-			AutomaticPlayScript.showHideForYeti(false);
-		}
 		Class'NWindow.UIAPI_WINDOW'.static.ShowWindow("YetiPCModeChangeWnd");
 		Class'NWindow.UIAPI_WINDOW'.static.ShowWindow("YetiQuickSlotWnd");
 	}
@@ -120,10 +114,6 @@ function setYetiMode(bool bUseYetiMode)
 		if(getInstanceUIData().GetIsLiveServer())
 		{
 			AutoUseItemWndScript.showHideForYeti(true);
-		}
-		else
-		{
-			AutomaticPlayScript.showHideForYeti(true);
 		}
 		Class'NWindow.UIAPI_WINDOW'.static.HideWindow("YetiPCModeChangeWnd");
 		Class'NWindow.UIAPI_WINDOW'.static.HideWindow("YetiQuickSlotWnd");
