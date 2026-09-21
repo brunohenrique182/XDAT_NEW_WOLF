@@ -1,0 +1,71 @@
+name: XDAT protocol diagnostics
+
+on:
+  push:
+    branches:
+      - feature/wolf-modern-xdat
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Inspect bundled Aden archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            echo "=== xdat-aden.zip ==="
+            unzip -Z1 xdat_editor/xdat-aden.zip | sed -n '1,200p'
+            echo
+            echo "=== archive entry sizes ==="
+            unzip -l xdat_editor/xdat-aden.zip | tail -n 80
+          } | tee aden-diagnostics.txt
+
+      - name: Inspect public ALN schema JAR
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --silent --show-error             https://raw.githubusercontent.com/ALN2025/editor-xdat-l2jaln/main/lib/schema.jar             -o /tmp/aln-schema.jar
+
+          jar tf /tmp/aln-schema.jar > /tmp/aln-schema-files.txt
+
+          {
+            echo "=== protocol packages in ALN schema.jar ==="
+            grep -E '^p[0-9]+/' /tmp/aln-schema-files.txt | cut -d/ -f1 | sort -Vu || true
+            echo
+            echo "=== version resources ==="
+            grep -Ei 'versions?\.csv|protocol|revision' /tmp/aln-schema-files.txt | head -n 100 || true
+            echo
+            for entry in $(grep -Ei 'versions?\.csv$' /tmp/aln-schema-files.txt); do
+              echo "--- $entry ---"
+              unzip -p /tmp/aln-schema.jar "$entry" || true
+              echo
+            done
+
+            echo "=== candidate XDAT classes ==="
+            grep -E '^p[0-9]+/(XDAT|DefaultProperty|Window)\.class$' /tmp/aln-schema-files.txt | sort -V || true
+            echo
+
+            for p in $(grep -E '^p[0-9]+/XDAT\.class$' /tmp/aln-schema-files.txt | cut -d/ -f1 | sort -Vu); do
+              echo "===== $p.XDAT ====="
+              javap -classpath /tmp/aln-schema.jar -private "$p.XDAT" 2>/dev/null || true
+              echo "===== $p.DefaultProperty ====="
+              javap -classpath /tmp/aln-schema.jar -private "$p.DefaultProperty" 2>/dev/null || true
+              echo "===== $p.Window ====="
+              javap -classpath /tmp/aln-schema.jar -private "$p.Window" 2>/dev/null || true
+            done
+          } | tee aln-schema-diagnostics.txt
+
+      - name: Publish diagnostics to log
+        shell: bash
+        run: |
+          echo "========== ADEN =========="
+          cat aden-diagnostics.txt
+          echo "========== ALN SCHEMA =========="
+          cat aln-schema-diagnostics.txt
