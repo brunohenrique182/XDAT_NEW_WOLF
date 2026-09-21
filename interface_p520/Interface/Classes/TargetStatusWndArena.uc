@@ -1,0 +1,2 @@
+class TargetStatusWndArena extends UICommonAPI;
+

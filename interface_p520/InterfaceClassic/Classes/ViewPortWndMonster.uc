@@ -1,0 +1,2 @@
+class ViewPortWndMonster extends ViewPortWndBase;
+

@@ -1,0 +1,2 @@
+class PartyWndCompact extends UICommonAPI;
+

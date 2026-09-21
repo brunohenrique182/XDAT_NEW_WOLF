@@ -1,0 +1,2 @@
+class SideBarMarbleGameWnd extends UICommonAPI;
+
